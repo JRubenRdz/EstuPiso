@@ -3,7 +3,7 @@
 
 [![My Skills](https://skillicons.dev/icons?i=java,spring,angular,bootstrap,jwt)](https://skillicons.dev)
 
-[![Java](https://img.shields.io/badge/Java-17-blue?logo=java&logoColor=white)](https://www.oracle.com/java/technologies/javase-downloads.html)
+[![Java](https://img.shields.io/badge/Java-21-blue?logo=java&logoColor=white)](https://www.oracle.com/java/technologies/javase-downloads.html)
 [![Maven](https://img.shields.io/badge/Maven-3.8.6-c71a36?logo=apachemaven&logoColor=white)](https://maven.apache.org/)
 [![Spring Boot](https://img.shields.io/badge/Spring%20Boot-3.1-green?logo=springboot&logoColor=white)](https://spring.io/projects/spring-boot)
 [![Angular](https://img.shields.io/badge/Frontend-Angular%2019-red?logo=angular&logoColor=white)](https://angular.io/)

@@ -1,26 +1,12 @@
-# ************************************************************
-# Los 8116 muncipios de España (2012)
-#
-# Datos obtenidos del INE (Instituto Nacional de Estadística):
-# http://www.ine.es/daco/daco42/codmun/codmun/codmunmapa.htm
-#
-# Fecha actualización de datos: ENERO 2012.
-#
-# Albert Lombarte
-# Twitter: @alombarte
-# ************************************************************
 
-# Dump of table municipios
-# ------------------------------------------------------------
-
-CREATE TABLE `municipios` (
-  `id_municipio` smallint(6) unsigned NOT NULL AUTO_INCREMENT,
-  `id_provincia` smallint(6) NOT NULL,
-  `cod_municipio` int(11) NOT NULL COMMENT 'Código de muncipio DENTRO de la provincia, campo no único',
-  `DC` int(11) NOT NULL COMMENT 'Digito Control. El INE no revela cómo se calcula, secreto nuclear.',
-  `nombre` varchar(100) NOT NULL DEFAULT '',
-  PRIMARY KEY (`id_municipio`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+CREATE TABLE municipios (
+  id_municipio smallint(6) unsigned NOT NULL AUTO_INCREMENT,
+  id_provincia smallint(6) NOT NULL,
+  cod_municipio int(11) NOT NULL COMMENT 'Código de muncipio DENTRO de la provincia, campo no único',
+  DC int(11) NOT NULL COMMENT 'Digito Control. El INE no revela cómo se calcula, secreto nuclear.',
+  nombre varchar(100) NOT NULL DEFAULT '',
+  PRIMARY KEY (id_municipio)
+)
 
 
 INSERT INTO `municipios` (`id_provincia`, `cod_municipio`, `DC`, `nombre`)

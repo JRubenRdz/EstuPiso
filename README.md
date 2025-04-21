@@ -20,7 +20,7 @@ La aplicación está construida con Spring Boot para el backend y Angular 19 par
 
 - **Backend**: [Spring Boot 3.4.4](https://spring.io/projects/spring-boot)  
 - **Frontend**: [Angular 19](https://angular.io/) con [Bootstrap](https://getbootstrap.com/)  
-- **Base de Datos**: [MS SQL Server](https://www.microsoft.com/es-es/sql-server/)  
+- **Base de Datos**: [PostgreSQL](http://postgresql.org/)  
 - **Autenticación**: [JWT](https://jwt.io/)  
 - **Gestor de Dependencias**: [Maven](https://maven.apache.org/)  
 - **API Testing**: [Postman](https://www.postman.com/)

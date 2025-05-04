@@ -13,10 +13,7 @@ import java.util.List;
 @NoArgsConstructor
 @Setter
 @Getter
-public class Comunidad {
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private int id;
+public class Comunidad extends DomainEntity{
 
     @NotNull
     private String nombre;

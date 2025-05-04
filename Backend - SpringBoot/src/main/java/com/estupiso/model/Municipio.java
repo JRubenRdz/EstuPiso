@@ -12,11 +12,7 @@ import lombok.Setter;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-public class Municipio {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private int id;
+public class Municipio extends DomainEntity{
 
     @ManyToOne
     @JoinColumn(name = "provincia_id", nullable = false)

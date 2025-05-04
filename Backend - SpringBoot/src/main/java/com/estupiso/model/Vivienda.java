@@ -15,14 +15,25 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-public class Vivienda {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.AUTO)
-    private int id;
+public class Vivienda extends DomainEntity {
 
     @NotBlank
-    private String direccion;
+    private String nombre;
+
+    @NotBlank
+    private String comunidad;
+
+    @NotBlank
+    private String provincia;
+
+    @NotBlank
+    private String municipio;
+
+    @NotBlank
+    private String calle;
+
+    @NotBlank
+    private String numero;
 
     @NotBlank
     private String descripcion;

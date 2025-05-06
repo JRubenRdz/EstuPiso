@@ -27,7 +27,7 @@ La aplicación está construida con Spring Boot para el backend y Angular 19 par
 
 ## 🛠️ Herramientas de Desarrollo
 
-- **Eclipse IDE**: Para desarrollo de código backend.
+- **IntelliJ IDEA**: Para desarrollo de código backend.
 - **Visual Studio Code (VS Code)**: Para desarrollo frontend.
 - **Postman**: Para realizar pruebas de API.
 - **Docker**: Para ejecutar un contenedor de PostgreSQL.

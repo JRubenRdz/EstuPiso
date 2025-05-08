@@ -42,7 +42,7 @@ public class EstudianteService {
         if (estudiante != null) {
             estudiante.setNombre(estudianteU.getNombre());
             estudiante.setUsuario(estudianteU.getUsuario());
-            estudiante.setContraseña(estudianteU.getContraseña());
+            estudiante.setContraseña(passwordEncoder.encode(estudianteU.getContraseña()));
             estudiante.setEmail(estudianteU.getEmail());
             estudiante.setFotoPerfil(estudianteU.getFotoPerfil());
             estudiante.setRol(Roles.ESTUDIANTE);
@@ -52,15 +52,25 @@ public class EstudianteService {
         return null;
     }
 
-    public List<Estudiante> getAllEstudiantes() {
+    public List<Estudiante> findAllEstudiantes() {
         return estudianteRepository.findAll();
     }
 
-    public Optional<Estudiante> getEstudianteById(int id) {
+    public Optional<Estudiante> findById(int id) {
         return estudianteRepository.findById(id);
     }
 
-    public Optional<Estudiante> getEstudianteByUsuario(String usuario) {
+    public Optional<Estudiante> findByUsuario(String usuario) {
         return estudianteRepository.findByUsuario(usuario);
+    }
+
+    @Transactional
+    public boolean deleteEstudiante() {
+        Estudiante estudiante = jwtUtils.userLogin();
+        if (estudiante != null) {
+            estudianteRepository.deleteById(estudiante.getId());
+            return true;
+        }
+        return false;
     }
 }

@@ -7,7 +7,9 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Getter
@@ -48,8 +50,22 @@ public class Vivienda extends DomainEntity {
     @NotBlank
     private String numeroHabitaciones;
 
+    @NotBlank
+    private LocalDateTime fechaPublicacion;
+
+    @NotBlank
+    private LocalDateTime ultimaEdicion;
+
     @OneToMany(mappedBy = "vivienda", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Estudiante> residentes = new ArrayList<>();
 
+    @OneToMany(mappedBy = "vivienda", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<FotoVivienda> fotos = new ArrayList<>();
 
+    public void añadirResidente(Estudiante estudiante) {
+        if (!residentes.contains(estudiante)) {
+            residentes.add(estudiante);
+        }
+        estudiante.setVivienda(this);
+    }
 }

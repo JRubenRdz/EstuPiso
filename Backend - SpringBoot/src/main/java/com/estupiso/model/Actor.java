@@ -5,7 +5,6 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Getter;
 import lombok.Setter;
-import org.hibernate.validator.constraints.URL;
 
 @Getter
 @Setter
@@ -26,9 +25,9 @@ public class Actor extends DomainEntity {
     @NotBlank
     private String email;
 
-    @URL
-    @NotBlank
-    private String fotoPerfil;
+    @Lob
+    @Column(columnDefinition = "bytea")
+    private byte[] fotoPerfil;
 
     @NotBlank
     private Roles rol;

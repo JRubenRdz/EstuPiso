@@ -3,6 +3,7 @@ package com.estupiso.security;
 import java.util.Date;
 import java.util.Optional;
 
+import com.estupiso.service.AnuncianteService;
 import com.estupiso.service.EstudianteService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Lazy;
@@ -22,7 +23,7 @@ import com.estupiso.service.AdminService;
 @Component
 public class JWTUtils {
     private static final String JWT_FIRMA = "manyWorker123";
-    private static final long EXTENCION_TOKEN = 86400000;
+    private static final long DURACION_TOKEN = 86400000;
 
     @Autowired
     @Lazy
@@ -64,7 +65,7 @@ public class JWTUtils {
     public static String generateToken(Authentication authentication) {
         String username = authentication.getName();
         Date fechaActual = new Date();
-        Date fechaExpiracion = new Date(fechaActual.getTime() + EXTENCION_TOKEN);
+        Date fechaExpiracion = new Date(fechaActual.getTime() + DURACION_TOKEN);
         String rol = authentication.getAuthorities().iterator().next().getAuthority();
 
         String token = Jwts.builder()

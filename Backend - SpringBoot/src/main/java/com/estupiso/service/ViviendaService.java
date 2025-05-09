@@ -6,8 +6,10 @@ import com.estupiso.model.Vivienda;
 import com.estupiso.repository.EstudianteRepository;
 import com.estupiso.repository.ViviendaRepository;
 import com.estupiso.security.JWTUtils;
+import com.estupiso.specification.ViviendaSpecification;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -40,6 +42,28 @@ public class ViviendaService {
 
     public Optional<Vivienda> findById(int id) {
         return viviendaRepository.findById(id);
+    }
+
+    public List<Vivienda> buscarViviendas(String comunidad, String provincia, String municipio,
+                                          String nombre, boolean soloDisponibles, String direccion) {
+        Specification<Vivienda> spec = Specification.where(null);
+
+        if (comunidad != null) {
+            spec = spec.and(ViviendaSpecification.conComunidad(comunidad));
+            if (provincia != null) {
+                spec = spec.and(ViviendaSpecification.conProvincia(provincia));
+                if (municipio != null) {
+                    spec = spec.and(ViviendaSpecification.conMunicipio(municipio));
+                }
+            }
+        }
+
+        spec = spec
+                .and(soloDisponibles ? ViviendaSpecification.disponible() : null)
+                .and(nombre != null ? ViviendaSpecification.conNombre(nombre) : null)
+                .and(direccion != null ? ViviendaSpecification.conDireccion(direccion) : null);
+
+        return viviendaRepository.findAll(spec);
     }
 
     @Transactional
@@ -89,6 +113,19 @@ public class ViviendaService {
             }
         }
         return null;
+    }
+
+    @Transactional
+    public boolean deleteVivienda(int idVivienda) {
+        Optional<Vivienda> viviendaO = viviendaRepository.findById(idVivienda);
+        if (viviendaO.isPresent()) {
+            Anunciante anuncianteLogin = jwtUtils.userLogin();
+            if (anuncianteLogin != null && anuncianteLogin.getViviendas().contains(viviendaO.get())) {
+                viviendaRepository.deleteById(idVivienda);
+                return true;
+            }
+        }
+        return false;
     }
 
 }

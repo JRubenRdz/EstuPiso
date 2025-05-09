@@ -9,6 +9,9 @@ import com.estupiso.security.JWTUtils;
 import com.estupiso.specification.ViviendaSpecification;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 
@@ -44,10 +47,9 @@ public class ViviendaService {
         return viviendaRepository.findById(id);
     }
 
-    public List<Vivienda> buscarViviendas(String comunidad, String provincia, String municipio,
-                                          String nombre, boolean soloDisponibles, String direccion) {
+    public Page<Vivienda> buscarViviendas(String comunidad, String provincia, String municipio,
+                                          String nombre, boolean soloDisponibles, String direccion, int pagina, int tamañoPagina) {
         Specification<Vivienda> spec = Specification.where(null);
-
         if (comunidad != null) {
             spec = spec.and(ViviendaSpecification.conComunidad(comunidad));
             if (provincia != null) {
@@ -57,13 +59,13 @@ public class ViviendaService {
                 }
             }
         }
-
         spec = spec
                 .and(soloDisponibles ? ViviendaSpecification.disponible() : null)
                 .and(nombre != null ? ViviendaSpecification.conNombre(nombre) : null)
                 .and(direccion != null ? ViviendaSpecification.conDireccion(direccion) : null);
+        Pageable pageable = PageRequest.of(pagina, tamañoPagina);
 
-        return viviendaRepository.findAll(spec);
+        return viviendaRepository.findAll(spec, pageable);
     }
 
     @Transactional

@@ -18,6 +18,7 @@ import com.estupiso.service.ActorService;
 
 @Component
 public class JWTAuthenticationFilter extends OncePerRequestFilter {
+
     @Autowired
     private ActorService actorService;
 

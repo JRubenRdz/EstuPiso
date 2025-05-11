@@ -3,14 +3,16 @@ package com.estupiso.model;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
 import lombok.Setter;
+import org.hibernate.validator.constraints.URL;
 
 @Getter
 @Setter
 @Entity
-@Inheritance(strategy = InheritanceType.JOINED)
-public class Actor extends DomainEntity {
+@Inheritance(strategy = InheritanceType.SINGLE_TABLE)
+public abstract class Actor extends DomainEntity {
 
     @NotBlank
     private String nombre;
@@ -25,11 +27,9 @@ public class Actor extends DomainEntity {
     @NotBlank
     private String email;
 
-    @Lob
-    @Column(columnDefinition = "bytea")
-    private byte[] fotoPerfil;
+    @URL
+    private String fotoPerfil;
 
-    @NotBlank
     private Roles rol;
 
     public Actor() {

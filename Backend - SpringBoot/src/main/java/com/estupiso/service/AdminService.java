@@ -8,6 +8,8 @@ import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Optional;
 
@@ -17,10 +19,20 @@ public class AdminService {
     @Autowired
     private AdminRepository adminRepository;
 
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
     private JWTUtils jwtUtils;
+
+    @Transactional
+    public Admin createAdmin(Admin admin) {
+        admin.setRol(Roles.ADMIN);
+
+        admin.setContraseña(passwordEncoder.encode(admin.getContraseña()));
+        return adminRepository.save(admin);
+    }
+
 
     @Transactional
     public Admin updateAdmin(Admin adminU) {
@@ -67,8 +79,7 @@ public class AdminService {
             defaultAdmin.setRol(Roles.ADMIN);
             defaultAdmin.setUsuario("admin");
             defaultAdmin.setEmail("admin@default.es");
-            defaultAdmin.setFotoPerfil(null);
-
+            defaultAdmin.setFotoPerfil("https://icons.veryicon.com/png/o/application/cloud-supervision-platform-vr10/admin-5.png");
             System.out.println("Usuario Admin creado por defecto");
             adminRepository.save(defaultAdmin);
         }

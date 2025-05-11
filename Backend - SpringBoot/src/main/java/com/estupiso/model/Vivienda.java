@@ -40,10 +40,6 @@ public class Vivienda extends DomainEntity {
     @NotBlank
     private String descripcion;
 
-    @ManyToOne
-    @JoinColumn(name = "anunciante_id")
-    private Anunciante anunciante;
-
     @NotBlank
     private String tipoVivienda;
 
@@ -55,6 +51,10 @@ public class Vivienda extends DomainEntity {
 
     @NotBlank
     private LocalDateTime ultimaEdicion;
+
+    @ManyToOne
+    @JoinColumn(name = "anunciante_id")
+    private Anunciante anunciante;
 
     @OneToMany(mappedBy = "vivienda", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<Estudiante> residentes = new ArrayList<>();

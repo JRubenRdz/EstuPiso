@@ -6,8 +6,9 @@ import lombok.Setter;
 
 @Getter
 @Setter
-@MappedSuperclass
-public class DomainEntity {
+@Entity
+@Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
+public abstract class DomainEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)

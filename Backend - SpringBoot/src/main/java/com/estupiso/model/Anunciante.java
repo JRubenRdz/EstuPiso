@@ -1,6 +1,7 @@
 package com.estupiso.model;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -17,6 +18,7 @@ import java.util.List;
 @Entity
 public class Anunciante extends Actor {
 
+    @NotNull
     @Pattern(regexp = "^([6789]\\d{8})?$")
     private String telefono;
 

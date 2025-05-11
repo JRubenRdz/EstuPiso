@@ -17,6 +17,7 @@ public class EstudianteService {
     @Autowired
     private EstudianteRepository estudianteRepository;
 
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired

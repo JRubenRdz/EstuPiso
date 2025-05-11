@@ -20,6 +20,7 @@ public class AnuncianteService {
     @Autowired
     private AnuncianteRepository anuncianteRepository;
 
+    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired

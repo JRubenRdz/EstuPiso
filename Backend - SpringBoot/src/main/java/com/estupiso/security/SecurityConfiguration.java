@@ -40,15 +40,33 @@ public class SecurityConfiguration {
                 // LOGIN
                 .requestMatchers("/login").permitAll()
                 .requestMatchers("/userLogin").permitAll()
-                .requestMatchers("/actorExiste/**").permitAll()
+                .requestMatchers("/actorExiste/**").hasAuthority("ADMIN")
 
                 // ANUNCIANTE
                 .requestMatchers(HttpMethod.POST, "/anunciante").permitAll()
                 .requestMatchers(HttpMethod.PUT, "/anunciante").hasAuthority("ANUNCIANTE")
                 .requestMatchers(HttpMethod.GET, "/anunciante/all").hasAuthority("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/anunciante/user/{usuario}").hasAuthority("ADMIN")
-                .requestMatchers(HttpMethod.GET, "/anunciante/{id}").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/anunciante/{id}").permitAll()
                 .requestMatchers(HttpMethod.DELETE, "/anunciante").hasAuthority("ANUNCIANTE")
+
+                // ESTUDIANTE
+                .requestMatchers(HttpMethod.POST, "/estudiante").permitAll()
+                .requestMatchers(HttpMethod.PUT, "/estudiante").hasAuthority("ESTUDIANTE")
+                .requestMatchers(HttpMethod.GET, "/estudiante/all").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/estudiante/{id}").permitAll()
+                .requestMatchers(HttpMethod.DELETE, "/estudiante").hasAuthority("ESTUDIANTE")
+                //.requestMatchers(HttpMethod.GET, "/estudiante/user/{usuario}").hasAuthority("ADMIN")
+
+                // VIVIENDA
+                .requestMatchers(HttpMethod.POST, "/vivienda").hasAuthority("ANUNCIANTE")
+                .requestMatchers(HttpMethod.PUT, "/vivienda").hasAuthority("ANUNCIANTE")
+                .requestMatchers(HttpMethod.GET, "/vivienda/all").hasAnyAuthority("ADMIN", "ANUNCIANTE", "ESTUDIANTE")
+                .requestMatchers(HttpMethod.GET, "/vivienda/anunciante").hasAuthority("ANUNCIANTE")
+                .requestMatchers(HttpMethod.GET, "/vivienda/{id}").permitAll()
+                .requestMatchers(HttpMethod.GET, "/vivienda/buscar").hasAnyAuthority("ADMIN", "ANUNCIANTE", "ESTUDIANTE")
+                .requestMatchers(HttpMethod.POST, "/vivienda/{idVivienda}/residente/{idResidente}").hasAuthority("ANUNCIANTE")
+                .requestMatchers(HttpMethod.DELETE, "/vivienda/{id}").hasAuthority("ANUNCIANTE")
 
                 // SWAGGER
                 .requestMatchers("/swagger-ui/**").permitAll()

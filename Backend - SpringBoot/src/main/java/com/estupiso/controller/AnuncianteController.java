@@ -43,7 +43,6 @@ public class AnuncianteController {
     @PutMapping
     @Operation(summary = "Actualizar un anunciante existente")
     @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Anunciante actualizado exitosamente"),
-            @ApiResponse(responseCode = "404", description = "Anunciante no encontrado"),
             @ApiResponse(responseCode = "400", description = "Solicitud no válida") })
     public void updateAnunciante(@RequestBody Anunciante anuncianteU) {
         Anunciante response = anuncianteService.updateAnunciante(anuncianteU);

@@ -14,10 +14,6 @@ import lombok.Setter;
 @Entity
 public class Municipio extends DomainEntity{
 
-    @ManyToOne
-    @JoinColumn(name = "provincia_id", nullable = false)
-    private Provincia provincia;
-
     @NotBlank
     private int codMunicipio;
 
@@ -27,6 +23,8 @@ public class Municipio extends DomainEntity{
     @NotBlank
     private String nombre;
 
-
+    @ManyToOne
+    @JoinColumn(name = "provincia_id", nullable = false)
+    private Provincia provincia;
 
 }

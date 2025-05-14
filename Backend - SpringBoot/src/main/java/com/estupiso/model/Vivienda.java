@@ -41,7 +41,10 @@ public class Vivienda extends DomainEntity {
     private String descripcion;
 
     @NotBlank
-    private String tipoVivienda;
+    private int precioMensual;
+
+    @NotBlank
+    private TiposVivienda tipoVivienda;
 
     @NotBlank
     private String numeroHabitaciones;

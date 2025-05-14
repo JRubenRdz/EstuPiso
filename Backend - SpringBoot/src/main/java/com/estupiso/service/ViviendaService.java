@@ -88,6 +88,7 @@ public class ViviendaService {
                 viviendaO.get().setUltimaEdicion(LocalDateTime.now());
                 viviendaO.get().setTipoVivienda(viviendaU.getTipoVivienda());
                 viviendaO.get().setCalle(viviendaU.getCalle());
+                viviendaO.get().setPrecioMensual(viviendaU.getPrecioMensual());
                 viviendaO.get().setNumero(viviendaU.getNumero());
                 viviendaO.get().setComunidad(viviendaU.getComunidad());
                 viviendaO.get().setProvincia(viviendaU.getProvincia());

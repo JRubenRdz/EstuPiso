@@ -34,9 +34,12 @@ public class ViviendaService {
     @Autowired
     private EstudianteRepository estudianteRepository;
 
-    public List<Vivienda> findByAnunciante() {
-        Anunciante anunciante = jwtUtils.userLogin();
-        return anunciante.getViviendas();
+    public List<Vivienda> findByAnunciante(int id) {
+        Optional<Anunciante> anunciante = anuncianteService.findById(id);
+        if (anunciante.isPresent()) {
+            return anunciante.get().getViviendas();
+        }
+        return null;
     }
 
     public List<Vivienda> findAllViviendas() {

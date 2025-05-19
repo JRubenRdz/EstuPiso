@@ -18,7 +18,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.util.List;
 
 @RestController
-@Tag(name = "Anunciante", description = "Endpoints para la consulta de comunidades")
+@Tag(name = "Anunciante", description = "Endpoints para la consulta de comunidades, provincias y municipios")
 public class UbicacionController {
 
     @Autowired

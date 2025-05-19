@@ -58,7 +58,11 @@ public class AdminService {
     }
 
     public Optional<Admin> findByUsuario(String username) {
-        return adminRepository.findByUsuario(username);
+        Admin userLogin = jwtUtils.userLogin();
+        if (userLogin != null && userLogin.getUsuario().equals(username)) {
+            return adminRepository.findByUsuario(username);
+        }
+        return Optional.empty();
     }
 
     @Transactional

@@ -1,7 +1,5 @@
 package com.estupiso.security;
 
-import com.estupiso.model.Roles;
-import org.apache.tomcat.util.http.parser.HttpParser;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,6 +12,11 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
+
+import java.util.List;
 
 @Configuration
 @EnableWebSecurity
@@ -42,11 +45,15 @@ public class SecurityConfiguration {
                 .requestMatchers("/userLogin").permitAll()
                 .requestMatchers("/actorExiste/**").hasAuthority("ADMIN")
 
+                // ADMIN
+                .requestMatchers(HttpMethod.POST, "/admin").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.PUT, "/admin").hasAuthority("ADMIN")
+
                 // ANUNCIANTE
                 .requestMatchers(HttpMethod.POST, "/anunciante").permitAll()
                 .requestMatchers(HttpMethod.PUT, "/anunciante").hasAuthority("ANUNCIANTE")
                 .requestMatchers(HttpMethod.GET, "/anunciante/all").hasAuthority("ADMIN")
-                .requestMatchers(HttpMethod.GET, "/anunciante/user/{usuario}").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/anunciante/user/{usuario}").hasAuthority("ANUNCIANTE")
                 .requestMatchers(HttpMethod.GET, "/anunciante/{id}").permitAll()
                 .requestMatchers(HttpMethod.DELETE, "/anunciante").hasAuthority("ANUNCIANTE")
 
@@ -54,18 +61,19 @@ public class SecurityConfiguration {
                 .requestMatchers(HttpMethod.POST, "/estudiante").permitAll()
                 .requestMatchers(HttpMethod.PUT, "/estudiante").hasAuthority("ESTUDIANTE")
                 .requestMatchers(HttpMethod.GET, "/estudiante/all").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/estudiante/user/{usuario}").hasAuthority("ESTUDIANTE")
                 .requestMatchers(HttpMethod.GET, "/estudiante/{id}").permitAll()
                 .requestMatchers(HttpMethod.DELETE, "/estudiante").hasAuthority("ESTUDIANTE")
-                //.requestMatchers(HttpMethod.GET, "/estudiante/user/{usuario}").hasAuthority("ADMIN")
+
 
                 // VIVIENDA
                 .requestMatchers(HttpMethod.POST, "/vivienda").hasAuthority("ANUNCIANTE")
                 .requestMatchers(HttpMethod.PUT, "/vivienda").hasAuthority("ANUNCIANTE")
                 .requestMatchers(HttpMethod.GET, "/vivienda/all").hasAnyAuthority("ADMIN", "ANUNCIANTE", "ESTUDIANTE")
-                .requestMatchers(HttpMethod.GET, "/vivienda/anunciante").hasAuthority("ANUNCIANTE")
+                .requestMatchers(HttpMethod.GET, "/vivienda/anunciante/{id}").hasAuthority("ANUNCIANTE")
                 .requestMatchers(HttpMethod.GET, "/vivienda/{id}").permitAll()
-                .requestMatchers(HttpMethod.GET, "/vivienda/buscar").hasAnyAuthority("ADMIN", "ANUNCIANTE", "ESTUDIANTE")
-                .requestMatchers(HttpMethod.POST, "/vivienda/{idVivienda}/residente/{idResidente}").hasAuthority("ANUNCIANTE")
+                .requestMatchers(HttpMethod.GET, "/vivienda/buscar").permitAll()
+                .requestMatchers(HttpMethod.GET, "/vivienda/{idVivienda}/residente/{idResidente}").hasAuthority("ANUNCIANTE")
                 .requestMatchers(HttpMethod.DELETE, "/vivienda/{id}").hasAuthority("ANUNCIANTE")
 
                 // SWAGGER
@@ -77,5 +85,17 @@ public class SecurityConfiguration {
 
         http.addFilterBefore(JWTAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
         return http.build();
+    }
+
+    @Bean
+    public CorsFilter corsFilter() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of("http://localhost:4200"));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type"));
+        config.setAllowCredentials(true);
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
     }
 }

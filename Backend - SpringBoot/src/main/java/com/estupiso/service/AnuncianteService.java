@@ -1,5 +1,6 @@
 package com.estupiso.service;
 
+import com.estupiso.model.Actor;
 import com.estupiso.model.Anunciante;
 import com.estupiso.model.Estudiante;
 import com.estupiso.model.Roles;

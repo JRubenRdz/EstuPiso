@@ -1,5 +1,6 @@
 package com.estupiso.controller;
 
+import com.estupiso.model.Anunciante;
 import com.estupiso.model.Vivienda;
 import com.estupiso.service.ViviendaService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -58,10 +59,10 @@ public class ViviendaController {
         return ResponseEntity.ok(viviendaService.findAllViviendas());
     }
 
-    @GetMapping("/anunciante")
-    @Operation(summary = "Obtener viviendas del anunciante actual")
-    public ResponseEntity<?> findByAnunciante() {
-        return ResponseEntity.ok(viviendaService.findByAnunciante());
+    @PostMapping("/anunciante/{id}")
+    @Operation(summary = "Obtener viviendas por anunciante")
+    public ResponseEntity<?> findByAnunciante(@PathVariable int id) {
+        return ResponseEntity.ok(viviendaService.findByAnunciante(id));
     }
 
     @GetMapping("/{id}")
@@ -90,7 +91,7 @@ public class ViviendaController {
         return ResponseEntity.ok(resultados);
     }
 
-    @PostMapping("/{idVivienda}/residente/{idResidente}")
+    @GetMapping("/{idVivienda}/residente/{idResidente}")
     @Operation(summary = "Añadir un residente a una vivienda")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Residente añadido exitosamente"),

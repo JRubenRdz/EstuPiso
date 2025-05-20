@@ -48,6 +48,7 @@ public class SecurityConfiguration {
                 // ADMIN
                 .requestMatchers(HttpMethod.POST, "/admin").hasAuthority("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/admin").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.GET, "/admin/user/{usuario}").hasAuthority("ADMIN")
 
                 // ANUNCIANTE
                 .requestMatchers(HttpMethod.POST, "/anunciante").permitAll()

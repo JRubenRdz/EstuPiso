@@ -50,5 +50,11 @@ public class AdminController {
         }
     }
 
+    @GetMapping("/user/{usuario}")
+    @Operation(summary = "Obtener un administrador por su usuario")
+    public ResponseEntity<Admin> findByUsuario(@PathVariable String usuario) {
+        return ResponseEntity.ok(adminService.findByUsuario(usuario).orElse(null));
+    }
+
 
 }

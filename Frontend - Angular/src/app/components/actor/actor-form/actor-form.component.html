@@ -23,7 +23,7 @@
         <input type="password" class="form-control" placeholder="Contraseña" formControlName="contraseña"
           [ngClass]="{'is-invalid': form.get('contraseña')?.invalid && form.get('contraseña')?.touched}">
         <div class="invalid-feedback" *ngIf="form.get('contraseña')?.invalid && form.get('contraseña')?.touched">
-          La contraseña es obligatoria y debe tener al menos 3 caracteres.
+          La contraseña debe tener al menos 3 caracteres.
         </div>
       </div>
       <div class="mb-3">

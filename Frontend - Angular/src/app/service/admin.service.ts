@@ -21,4 +21,7 @@ actualizarAdmin(admin: Admin): Observable<void> {
   return this.http.put<any>(`${this.urlAPI}`, admin);
 }
 
+getAdminByUsuario(usuario: string): Observable<Admin> {
+  return this.http.get<Admin>(`${this.urlAPI}/user/${usuario}`);
+}
 }

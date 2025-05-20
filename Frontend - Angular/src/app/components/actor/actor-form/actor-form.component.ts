@@ -3,6 +3,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router } from '@angular/router';
 import { EstudianteService } from '../../../service/estudiante.service';
 import { AnuncianteService } from '../../../service/anunciante.service';
+import { AdminService } from '../../../service/admin.service'; // <-- Añade esto
 import { Actor } from '../../../model/Actor';
 import { CommonModule, NgClass } from '@angular/common';
 import { jwtDecode } from 'jwt-decode';
@@ -28,6 +29,7 @@ export class ActorFormComponent implements OnInit {
     private fb: FormBuilder,
     private estudianteService: EstudianteService,
     private anuncianteService: AnuncianteService,
+    private adminService: AdminService, // <-- Añade esto
     private router: Router
   ) {}
 
@@ -63,6 +65,18 @@ export class ActorFormComponent implements OnInit {
             fotoPerfil: actor.fotoPerfil,
             rol: actor.rol,
             telefono: actor.telefono
+          });
+          this.form.get('rol')?.disable();
+        });
+      } else if (rol === 'ADMIN') { // <-- Añade este bloque
+        this.adminService.getAdminByUsuario(usuario).subscribe(actor => {
+          this.form.patchValue({
+            nombre: actor.nombre,
+            usuario: actor.usuario,
+            email: actor.email,
+            fotoPerfil: actor.fotoPerfil,
+            rol: actor.rol,
+            telefono: ''
           });
           this.form.get('rol')?.disable();
         });

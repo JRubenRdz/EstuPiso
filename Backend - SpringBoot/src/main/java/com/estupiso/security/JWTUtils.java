@@ -3,6 +3,7 @@ package com.estupiso.security;
 import java.util.Date;
 import java.util.Optional;
 
+import com.estupiso.model.Roles;
 import com.estupiso.service.AnuncianteService;
 import com.estupiso.service.EstudianteService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -62,17 +63,42 @@ public class JWTUtils {
         return Jwts.parser().setSigningKey(JWT_FIRMA).parseClaimsJws(token).getBody().getSubject();
     }
 
-    public static String generateToken(Authentication authentication) {
+    public String generateToken(Authentication authentication) {
         String username = authentication.getName();
         Date fechaActual = new Date();
         Date fechaExpiracion = new Date(fechaActual.getTime() + DURACION_TOKEN);
         String rol = authentication.getAuthorities().iterator().next().getAuthority();
 
+        // Obtener el ID según el rol
+        int id;
+        switch (rol) {
+            case "ESTUDIANTE":
+                id = estudianteService.findByUsuario(username)
+                        .map(e -> e.getId())
+                        .orElse(null);
+                break;
+            case "ANUNCIANTE":
+                id = anuncianteService.findByUsuario(username)
+                        .map(a -> a.getId())
+                        .orElse(null);
+                break;
+            case "ADMIN":
+                id = adminService.findByUsuario(username)
+                        .map(a -> a.getId())
+                        .orElse(null);
+                break;
+            default:
+                id = 0;
+                break;
+        }
+
+        // Construir el token, añadiendo el claim "id"
         String token = Jwts.builder()
                 .setSubject(username)
                 .setIssuedAt(fechaActual)
                 .setExpiration(fechaExpiracion)
                 .claim("rol", rol)
+                .claim("id", id)
                 .signWith(SignatureAlgorithm.HS512, JWT_FIRMA).compact();
         return token;
     }

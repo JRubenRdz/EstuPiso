@@ -56,5 +56,17 @@ public class AdminController {
         return ResponseEntity.ok(adminService.findByUsuario(usuario).orElse(null));
     }
 
+    @DeleteMapping
+    @Operation(summary = "Eliminar el admin logeado")
+    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Admin eliminado exitosamente"),
+            @ApiResponse(responseCode = "404", description = "Admin no encontrado")})
+    public void deleteAdmin() {
+        if (adminService.deleteAdmin()) {
+            ResponseEntity.status(HttpStatus.OK).body("Administrador eliminado exitosamente");
+        } else {
+            ResponseEntity.status(HttpStatus.NOT_FOUND).body("Administrador no encontrado");
+        }
+    }
+
 
 }

@@ -1,7 +1,6 @@
 package com.estupiso.controller;
 
 import com.estupiso.model.Anunciante;
-import com.estupiso.repository.AnuncianteRepository;
 import com.estupiso.service.AnuncianteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -12,6 +11,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Optional;
 
 @RestController
@@ -27,15 +28,15 @@ public class AnuncianteController {
     @ApiResponses(value = { @ApiResponse(responseCode = "201", description = "Anunciante creado exitosamente"),
             @ApiResponse(responseCode = "400", description = "Solicitud no válida"),
             @ApiResponse(responseCode = "409", description = "El usuario ya existe")})
-    public void saveAnunciante(@RequestBody Anunciante anunciante) {
+    public ResponseEntity<String> saveAnunciante(@RequestBody Anunciante anunciante) {
         if (anuncianteService.findByUsuario(anunciante.getUsuario()).isPresent()) {
-            ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El usuario ya existe");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("El usuario ya existe");
         } else {
             Anunciante a = anuncianteService.createAnunciante(anunciante);
             if (a != null) {
-                ResponseEntity.status(HttpStatus.CREATED).body("Anunciante creado exitosamente");
+                return ResponseEntity.status(HttpStatus.CREATED).body("Anunciante creado exitosamente");
             } else {
-                ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No se pudo crear el anunciante");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No se pudo crear el anunciante");
             }
         }
     }
@@ -44,12 +45,13 @@ public class AnuncianteController {
     @Operation(summary = "Actualizar un anunciante existente")
     @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Anunciante actualizado exitosamente"),
             @ApiResponse(responseCode = "400", description = "Solicitud no válida") })
-    public void updateAnunciante(@RequestBody Anunciante anuncianteU) {
-        Anunciante response = anuncianteService.updateAnunciante(anuncianteU);
-        if (response != null) {
-            ResponseEntity.status(HttpStatus.OK).body("anunciante actualizado exitosamente");
+    public ResponseEntity<String> updateAnunciante(@RequestBody Anunciante anuncianteU) {
+        Anunciante update = anuncianteService.updateAnunciante(anuncianteU);
+        if (update != null) {
+            Map<String, String> response = new HashMap<>();
+            return ResponseEntity.status(HttpStatus.OK).body("Anunciante actualizado exitosamente");
         } else {
-            ResponseEntity.status(HttpStatus.NOT_FOUND).body("anunciante no encontrado");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Anunciante no encontrado");
         }
     }
 
@@ -80,14 +82,12 @@ public class AnuncianteController {
     @Operation(summary = "Eliminar un anunciante")
     @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Anunciante eliminado exitosamente"),
             @ApiResponse(responseCode = "404", description = "Anunciante no encontrado")})
-    public void deleteAnunciante() {
+    public ResponseEntity<String> deleteAnunciante() {
         if (anuncianteService.deleteAnunciante()) {
-            ResponseEntity.status(HttpStatus.OK).body("Anunciante eliminado exitosamente");
+            return ResponseEntity.status(HttpStatus.OK).body("Anunciante eliminado exitosamente");
         } else {
-            ResponseEntity.status(HttpStatus.NOT_FOUND).body("Anunciante no encontrado");
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Anunciante no encontrado");
         }
     }
-
-
 
 }

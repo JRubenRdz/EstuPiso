@@ -13,11 +13,11 @@ constructor(private http: HttpClient) { }
   private urlAPI = environment.apiUrl + '/anunciante';
 
   guardarAnunciante(anunciante: any): Observable<void> {
-    return this.http.post<any>(`${this.urlAPI}`, anunciante);
+    return this.http.post<void>(`${this.urlAPI}`, anunciante);
   }
 
   actualizarAnunciante(anunciante: any): Observable<void> {
-    return this.http.put<any>(`${this.urlAPI}`, anunciante);
+    return this.http.put<void>(`${this.urlAPI}`, anunciante);
   }
 
   getAllAnunciantes(): Observable<any[]> {

@@ -40,6 +40,7 @@ public class SecurityConfiguration {
         http.cors().and()
                 .csrf().disable()
                 .authorizeHttpRequests()
+
                 // LOGIN
                 .requestMatchers("/login").permitAll()
                 .requestMatchers("/userLogin").permitAll()
@@ -49,21 +50,20 @@ public class SecurityConfiguration {
                 .requestMatchers(HttpMethod.POST, "/admin").hasAuthority("ADMIN")
                 .requestMatchers(HttpMethod.PUT, "/admin").hasAuthority("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/admin/user/{usuario}").hasAuthority("ADMIN")
+                .requestMatchers(HttpMethod.DELETE, "/admin").hasAuthority("ADMIN")
 
                 // ANUNCIANTE
                 .requestMatchers(HttpMethod.POST, "/anunciante").permitAll()
                 .requestMatchers(HttpMethod.PUT, "/anunciante").hasAuthority("ANUNCIANTE")
                 .requestMatchers(HttpMethod.GET, "/anunciante/all").hasAuthority("ADMIN")
-                .requestMatchers(HttpMethod.GET, "/anunciante/user/{usuario}").hasAuthority("ANUNCIANTE")
-                .requestMatchers(HttpMethod.GET, "/anunciante/{id}").permitAll()
+                .requestMatchers(HttpMethod.GET, "/anunciante/{id}").hasAuthority("ANUNCIANTE")
                 .requestMatchers(HttpMethod.DELETE, "/anunciante").hasAuthority("ANUNCIANTE")
 
                 // ESTUDIANTE
                 .requestMatchers(HttpMethod.POST, "/estudiante").permitAll()
                 .requestMatchers(HttpMethod.PUT, "/estudiante").hasAuthority("ESTUDIANTE")
                 .requestMatchers(HttpMethod.GET, "/estudiante/all").hasAuthority("ADMIN")
-                .requestMatchers(HttpMethod.GET, "/estudiante/user/{usuario}").hasAuthority("ESTUDIANTE")
-                .requestMatchers(HttpMethod.GET, "/estudiante/{id}").permitAll()
+                .requestMatchers(HttpMethod.GET, "/estudiante/{id}").hasAuthority("ESTUDIANTE")
                 .requestMatchers(HttpMethod.DELETE, "/estudiante").hasAuthority("ESTUDIANTE")
 
 
@@ -71,7 +71,7 @@ public class SecurityConfiguration {
                 .requestMatchers(HttpMethod.POST, "/vivienda").hasAuthority("ANUNCIANTE")
                 .requestMatchers(HttpMethod.PUT, "/vivienda").hasAuthority("ANUNCIANTE")
                 .requestMatchers(HttpMethod.GET, "/vivienda/all").hasAnyAuthority("ADMIN", "ANUNCIANTE", "ESTUDIANTE")
-                .requestMatchers(HttpMethod.GET, "/vivienda/anunciante/{id}").hasAuthority("ANUNCIANTE")
+                .requestMatchers(HttpMethod.GET, "/vivienda/anunciante/{id}").permitAll()
                 .requestMatchers(HttpMethod.GET, "/vivienda/{id}").permitAll()
                 .requestMatchers(HttpMethod.GET, "/vivienda/buscar").permitAll()
                 .requestMatchers(HttpMethod.GET, "/vivienda/{idVivienda}/residente/{idResidente}").hasAuthority("ANUNCIANTE")

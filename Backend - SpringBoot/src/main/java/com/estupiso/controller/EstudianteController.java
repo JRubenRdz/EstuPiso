@@ -26,15 +26,15 @@ public class EstudianteController {
     @ApiResponses(value = { @ApiResponse(responseCode = "201", description = "Estudiante creado exitosamente"),
             @ApiResponse(responseCode = "400", description = "Solicitud no válida"),
             @ApiResponse(responseCode = "409", description = "El usuario ya existe")})
-    public void saveEstudiante(@RequestBody Estudiante usuario) {
+    public ResponseEntity<?> saveEstudiante(@RequestBody Estudiante usuario) {
         if (estudianteService.findByUsuario(usuario.getUsuario()).isPresent()) {
-            ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El usuario ya existe");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("El usuario ya existe");
         } else {
             Estudiante e = estudianteService.createEstudiante(usuario);
             if (e != null) {
-                ResponseEntity.status(HttpStatus.CREATED).body("Estudiante creado exitosamente");
+                return ResponseEntity.status(HttpStatus.CREATED).body("Estudiante creado exitosamente");
             } else {
-                ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No se pudo crear el estudiante");
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No se pudo crear el estudiante");
             }
         }
     }

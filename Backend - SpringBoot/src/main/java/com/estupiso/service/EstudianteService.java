@@ -30,6 +30,11 @@ public class EstudianteService {
 
     @Transactional
     public Estudiante createEstudiante(Estudiante estudiante) {
+
+        Optional<Estudiante> estudianteO = estudianteRepository.findByUsuario(estudiante.getUsuario());
+        if (estudianteO.isPresent()) {
+            return null;
+        }
         estudiante.setVivienda(null);
         estudiante.setRol(Roles.ESTUDIANTE);
 

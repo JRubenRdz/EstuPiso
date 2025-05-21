@@ -17,8 +17,8 @@
         </li>
         <!-- ADMIN -->
         <li *ngIf="rol === 'ADMIN'" class="nav-item">
-          <a class="nav-link" routerLink="/crear-admin">
-            <i class="bi bi-person-plus-fill me-1"></i> Crear Administrador
+          <a class="nav-link" href="/create-user">
+            <i class="bi bi-person-plus-fill me-1"></i> Crear usuario
           </a>
         </li>
         <!-- ESTUDIANTE -->
@@ -74,7 +74,7 @@
                 </a>
               </li>
               <li>
-                <a class="dropdown-item text-danger" routerLink="/eliminar-usuario">
+                <a class="dropdown-item text-danger" href="#" data-bs-toggle="modal" data-bs-target="#confirmDeleteModal">
                   <i class="bi bi-trash me-2"></i> Eliminar usuario
                 </a>
               </li>
@@ -85,3 +85,22 @@
     </div>
   </div>
 </nav>
+
+<!-- Modal de confirmación de eliminación de usuario -->
+<div class="modal fade" id="confirmDeleteModal" tabindex="-1" aria-labelledby="confirmDeleteModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="confirmDeleteModalLabel">Confirmar eliminación</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        ¿Estás seguro de que deseas eliminar tu usuario? Esta acción no se puede deshacer.
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        <button type="button" class="btn btn-danger" (click)="eliminarUsuario()">Eliminar</button>
+      </div>
+    </div>
+  </div>
+</div>

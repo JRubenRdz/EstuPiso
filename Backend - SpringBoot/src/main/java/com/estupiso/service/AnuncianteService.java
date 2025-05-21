@@ -34,6 +34,12 @@ public class AnuncianteService {
 
     @Transactional
     public Anunciante createAnunciante(Anunciante anunciante) {
+
+        Optional<Anunciante> anuncianteO = anuncianteRepository.findByUsuario(anunciante.getUsuario());
+        if (anuncianteO.isPresent()) {
+            return null;
+        }
+
         anunciante.setViviendas(new ArrayList<>());
         anunciante.setRol(Roles.ANUNCIANTE);
 
@@ -47,14 +53,15 @@ public class AnuncianteService {
         if (anunciante != null) {
             anunciante.setContraseña(passwordEncoder.encode(anuncianteU.getContraseña()));
             anunciante.setRol(Roles.ANUNCIANTE);
-            anunciante.setViviendas(anuncianteU.getViviendas());
+            anunciante.getViviendas().clear();
+            anunciante.getViviendas().addAll(anuncianteU.getViviendas());
             anunciante.setEmail(anuncianteU.getEmail());
             anunciante.setNombre(anuncianteU.getNombre());
             anunciante.setTelefono(anuncianteU.getTelefono());
             anunciante.setFotoPerfil(anuncianteU.getFotoPerfil());
             anunciante.setUsuario(anuncianteU.getUsuario());
             return anuncianteRepository.save(anunciante);
-            }
+        }
         return null;
     }
 

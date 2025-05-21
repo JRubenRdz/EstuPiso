@@ -1,4 +1,4 @@
-<div class="container d-flex justify-content-center align-items-center min-vh-100">
+<div *ngIf="mostrarFormulario; else accesoDenegado" class="container d-flex justify-content-center align-items-center min-vh-100">
   <div class="card shadow p-4" style="min-width: 350px; max-width: 500px; width: 100%;">
     <div class="text-center mb-4">
       <i class="bi bi-person-circle fs-1 text-primary"></i>
@@ -13,24 +13,20 @@
         </div>
       </div>
       <div class="mb-3">
-        <input type="text" class="form-control" placeholder="Nombre de usuario" formControlName="usuario"
-          [ngClass]="{'is-invalid': form.get('usuario')?.invalid && form.get('usuario')?.touched}">
+        <input type="text" class="form-control" placeholder="Nombre de usuario" formControlName="usuario" [readonly]="modoEdicion"
+          [ngClass]="{'is-invalid': (form.get('usuario')?.invalid && form.get('usuario')?.touched) || usuarioRepetido}">
         <div class="invalid-feedback" *ngIf="form.get('usuario')?.invalid && form.get('usuario')?.touched">
           El usuario es obligatorio y debe tener al menos 3 caracteres.
         </div>
-      </div>
-      <div class="mb-3" *ngIf="!modoEdicion">
-        <input type="password" class="form-control" placeholder="Contraseña" formControlName="contraseña"
-          [ngClass]="{'is-invalid': form.get('contraseña')?.invalid && form.get('contraseña')?.touched}">
-        <div class="invalid-feedback" *ngIf="form.get('contraseña')?.invalid && form.get('contraseña')?.touched">
-          La contraseña debe tener al menos 3 caracteres.
+        <div class="invalid-feedback" *ngIf="usuarioRepetido">
+          El nombre de usuario ya está en uso. Por favor, elige otro.
         </div>
       </div>
       <div class="mb-3">
-        <input type="email" class="form-control" placeholder="Correo electrónico" formControlName="email"
-          [ngClass]="{'is-invalid': form.get('email')?.invalid && form.get('email')?.touched}">
-        <div class="invalid-feedback" *ngIf="form.get('email')?.invalid && form.get('email')?.touched">
-          Introduce un correo válido.
+        <input type="password" class="form-control pe-5" placeholder="Contraseña" formControlName="contraseña"
+          [ngClass]="{'is-invalid': form.get('contraseña')?.invalid && form.get('contraseña')?.touched}">
+        <div class="invalid-feedback" *ngIf="form.get('contraseña')?.invalid && form.get('contraseña')?.touched">
+          La contraseña debe tener al menos 3 caracteres.
         </div>
       </div>
       <div class="mb-3">
@@ -40,10 +36,17 @@
           Introduce una URL válida.
         </div>
       </div>
-      <!-- Selector de rol solo si no es admin -->
-      <div class="mb-3" *ngIf="!isAdmin()">
+      <div class="mb-3">
+        <input type="email" class="form-control" placeholder="Correo electrónico" formControlName="email"
+          [ngClass]="{'is-invalid': form.get('email')?.invalid && form.get('email')?.touched}">
+        <div class="invalid-feedback" *ngIf="form.get('email')?.invalid && form.get('email')?.touched">
+          Introduce un correo válido.
+        </div>
+      </div>
+      <!-- Selector de rol: siempre visible pero solo editable en registro y create-user por admin -->
+      <div class="mb-3">
         <label class="form-label">Tipo de usuario</label>
-        <select class="form-select" formControlName="rol" [disabled]="modoEdicion">
+        <select class="form-select" formControlName="rol" [attr.disabled]="(modoEdicion && !puedeCrearAdmin) ? true : null">
           <option value="" disabled>Selecciona un rol</option>
           <option *ngFor="let r of roles" [value]="r.value">{{ r.label }}</option>
         </select>
@@ -61,9 +64,48 @@
       </div>
       <div class="d-flex justify-content-between mt-4">
         <button type="button" class="btn btn-secondary" (click)="cancelar()">Cancelar</button>
-        <button *ngIf="modoEdicion" type="submit" class="btn btn-success" [disabled]="form.invalid">Guardar cambios</button>
-        <button *ngIf="!modoEdicion" type="submit" class="btn btn-primary" [disabled]="form.invalid">Finalizar registro</button>
+        <button *ngIf="modoEdicion" type="submit" class="btn btn-success" [disabled]="form.invalid">Guardar cambios
+        </button>
+        <button *ngIf="!modoEdicion" type="submit" class="btn btn-primary" [disabled]="form.invalid">Finalizar
+          registro</button>
       </div>
     </form>
+
+    <!-- Modal de éxito -->
+    <div class="modal fade" id="modalExito" tabindex="-1" aria-labelledby="modalExitoLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-success text-white">
+            <h5 class="modal-title" id="modalExitoLabel">¡Éxito!</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            {{ mensajeExito }}
+          </div>
+        </div>
+      </div>
+    </div>
+    <!-- Modal de error -->
+    <div class="modal fade" id="modalError" tabindex="-1" aria-labelledby="modalErrorLabel" aria-hidden="true">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-header bg-danger text-white">
+            <h5 class="modal-title" id="modalErrorLabel">Error</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+          </div>
+          <div class="modal-body">
+            {{ mensajeError }}
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
+<ng-template #accesoDenegado>
+  <div class="container d-flex justify-content-center align-items-center min-vh-100">
+    <div class="alert alert-danger text-center">
+      <i class="bi bi-exclamation-triangle-fill me-2"></i>
+      No tienes permiso para acceder a esta página.
+    </div>
+  </div>
+</ng-template>

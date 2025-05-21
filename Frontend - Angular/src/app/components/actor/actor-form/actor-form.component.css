@@ -1,0 +1,10 @@
+.show-password-btn {
+  /* Ajusta el desplazamiento del botón del ojo para que no se solape con el icono de validación */
+  right: 2.5rem;
+}
+
+/* Opcional: mejora el foco y el hover */
+.show-password-btn:focus, .show-password-btn:hover {
+  background: transparent;
+  box-shadow: none;
+}

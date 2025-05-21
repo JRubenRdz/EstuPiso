@@ -17,7 +17,7 @@ constructor(private http: HttpClient) { }
   }
   
   actualizarEstudiante(estudiante: any): Observable<void> {
-    return this.http.put<any>(`${this.urlAPI}`, estudiante);
+    return this.http.put<void>(`${this.urlAPI}`, estudiante);
   }
 
   getAllEstudiantes(): Observable<any[]> {

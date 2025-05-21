@@ -33,7 +33,6 @@ public class AdminService {
         return adminRepository.save(admin);
     }
 
-
     @Transactional
     public Admin updateAdmin(Admin adminU) {
         Admin admin = jwtUtils.userLogin();

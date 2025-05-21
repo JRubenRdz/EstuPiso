@@ -9,19 +9,23 @@ import { Observable } from 'rxjs';
 })
 export class AdminService {
 
-constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient) { }
 
-private urlAPI = environment.apiUrl + '/admin';
+  private urlAPI = environment.apiUrl + '/admin';
 
-guardarAdmin(admin: Admin): Observable<void> {
-  return this.http.post<any>(`${this.urlAPI}`, admin);
-}
+  guardarAdmin(admin: Admin): Observable<void> {
+    return this.http.post<void>(`${this.urlAPI}`, admin);
+  }
 
-actualizarAdmin(admin: Admin): Observable<void> {
-  return this.http.put<any>(`${this.urlAPI}`, admin);
-}
+  actualizarAdmin(admin: Admin): Observable<void> {
+    return this.http.put<void>(`${this.urlAPI}`, admin);
+  }
 
-getAdminByUsuario(usuario: string): Observable<Admin> {
-  return this.http.get<Admin>(`${this.urlAPI}/user/${usuario}`);
-}
+  getAdminByUsuario(usuario: string): Observable<Admin> {
+    return this.http.get<Admin>(`${this.urlAPI}/user/${usuario}`);
+  }
+
+  eliminarAdminLogeado(): Observable<void> {
+    return this.http.delete<void>(`${this.urlAPI}`);
+  }
 }

@@ -3,7 +3,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router, ActivatedRoute } from '@angular/router';
 import { EstudianteService } from '../../../service/estudiante.service';
 import { AnuncianteService } from '../../../service/anunciante.service';
-import { AdminService } from '../../../service/admin.service'; // <-- Añade esto
+import { AdminService } from '../../../service/admin.service';
 import { Actor } from '../../../model/Actor';
 import { CommonModule, NgClass } from '@angular/common';
 import { jwtDecode } from 'jwt-decode';
@@ -55,16 +55,18 @@ export class ActorFormComponent implements OnInit {
       return;
     }
     if (currentRoute === 'register') {
-      // Registro: solo si NO hay token
       this.usuarioLogeado = false;
       this.mostrarFormulario = !token;
       this.titulo = 'Registro de usuario';
       this.modoEdicion = false;
       this.puedeCrearAdmin = false;
-      // Permitir editar usuario en registro
       this.form.get('usuario')?.enable();
+      this.form.get('rol')?.enable();
+      this.roles = [
+        { value: 'ESTUDIANTE', label: 'Estudiante' },
+        { value: 'ANUNCIANTE', label: 'Anunciante' }
+      ];
     } else if (currentRoute === 'create-user') {
-      // Solo permitir acceso si es admin
       if (token) {
         const decoded: any = jwtDecode(token);
         const rol = decoded.rol;
@@ -80,6 +82,7 @@ export class ActorFormComponent implements OnInit {
           ];
           this.mostrarFormulario = true;
           this.form.get('usuario')?.enable();
+          this.form.get('rol')?.enable();
         } else {
           this.puedeCrearAdmin = false;
           this.mostrarFormulario = false;
@@ -90,7 +93,6 @@ export class ActorFormComponent implements OnInit {
         this.mostrarFormulario = false;
       }
     } else if (currentRoute === 'mis-datos') {
-      // Permitir acceso a cualquier usuario autenticado
       if (token) {
         const decoded: any = jwtDecode(token);
         const id = decoded.id;
@@ -98,35 +100,15 @@ export class ActorFormComponent implements OnInit {
         this.usuarioLogeado = true;
         this.titulo = 'Mis datos';
         this.modoEdicion = true;
-        this.puedeCrearAdmin = rol === 'ADMIN';
+        this.puedeCrearAdmin = false; // Nunca permitir cambiar rol en mis-datos
         this.mostrarFormulario = true;
-        // Bloquear edición de usuario
         this.form.get('usuario')?.disable();
-        if (rol === 'ESTUDIANTE') {
-          this.estudianteService.getEstudianteById(id).subscribe(actor => {
-            this.form.patchValue({
-              nombre: actor.nombre,
-              usuario: actor.usuario,
-              email: actor.email,
-              fotoPerfil: actor.fotoPerfil,
-              rol: actor.rol,
-              telefono: ''
-            });
-            // ...usuario ya deshabilitado arriba
-          });
-        } else if (rol === 'ANUNCIANTE') {
-          this.anuncianteService.getAnuncianteById(id).subscribe(actor => {
-            this.form.patchValue({
-              nombre: actor.nombre,
-              usuario: actor.usuario,
-              email: actor.email,
-              fotoPerfil: actor.fotoPerfil,
-              rol: actor.rol,
-              telefono: actor.telefono
-            });
-            // ...usuario ya deshabilitado arriba
-          });
-        } else if (rol === 'ADMIN') {
+        this.form.get('rol')?.disable();
+        // Mostrar el rol correcto en el desplegable (incluido admin)
+        if (rol === 'ADMIN') {
+          this.roles = [
+            { value: 'ADMIN', label: 'Administrador' }
+          ];
           this.adminService.getAdminByUsuario(decoded.sub).subscribe(actor => {
             this.form.patchValue({
               nombre: actor.nombre,
@@ -136,16 +118,41 @@ export class ActorFormComponent implements OnInit {
               rol: actor.rol,
               telefono: ''
             });
-            // ...usuario ya deshabilitado arriba
+          });
+        } else if (rol === 'ESTUDIANTE') {
+          this.roles = [
+            { value: 'ESTUDIANTE', label: 'Estudiante' }
+          ];
+          this.estudianteService.getEstudianteById(id).subscribe(actor => {
+            this.form.patchValue({
+              nombre: actor.nombre,
+              usuario: actor.usuario,
+              email: actor.email,
+              fotoPerfil: actor.fotoPerfil,
+              rol: actor.rol,
+              telefono: ''
+            });
+          });
+        } else if (rol === 'ANUNCIANTE') {
+          this.roles = [
+            { value: 'ANUNCIANTE', label: 'Anunciante' }
+          ];
+          this.anuncianteService.getAnuncianteById(id).subscribe(actor => {
+            this.form.patchValue({
+              nombre: actor.nombre,
+              usuario: actor.usuario,
+              email: actor.email,
+              fotoPerfil: actor.fotoPerfil,
+              rol: actor.rol,
+              telefono: actor.telefono
+            });
           });
         }
       } else {
-        // Si no hay token, redirigir a login
         this.router.navigate(['/login']);
         return;
       }
     } else {
-      // Cualquier otra ruta: no mostrar formulario
       this.usuarioLogeado = false;
       this.puedeCrearAdmin = false;
       this.mostrarFormulario = false;
@@ -196,38 +203,15 @@ export class ActorFormComponent implements OnInit {
     if (this.form.invalid) return;
     const datos = { ...this.form.getRawValue() };
     if (this.modoEdicion) {
-      // Eliminar usuario del payload para evitar que se envíe aunque esté en el input (por seguridad)
-      delete datos.usuario;
       if (!datos.contraseña) delete datos.contraseña;
     }
 
     if (datos.rol === 'ADMIN') {
-      this.adminService.guardarAdmin(datos).subscribe({
-        next: () => {
-          this.mensajeExito = 'Administrador creado correctamente.';
-          this.abrirModal('modalExito');
-          setTimeout(() => this.router.navigate(['/']), 1500);
-        },
-        error: (err) => {
-          if (err.status === 500) {
-            this.usuarioRepetido = true;
-            this.mensajeError = 'El nombre de usuario ya está en uso. Por favor, elige otro.';
-          } else {
-            this.mensajeError = 'Error al registrar el administrador.';
-          }
-          this.abrirModal('modalError');
-        }
-      });
-      return;
-    }
-
-    if (this.isAnunciante()) {
       if (this.modoEdicion) {
-        this.anuncianteService.actualizarAnunciante(datos).subscribe({
+        this.adminService.actualizarAdmin(datos).subscribe({
           next: () => {
             this.mensajeExito = 'Datos actualizados correctamente.';
             this.abrirModal('modalExito');
-            setTimeout(() => this.router.navigate(['/']), 1500);
           },
           error: (err) => {
             if (err.status === 500) {
@@ -240,20 +224,64 @@ export class ActorFormComponent implements OnInit {
           }
         });
       } else {
-        this.anuncianteService.guardarAnunciante(datos).subscribe({
+        this.adminService.guardarAdmin(datos).subscribe({
           next: () => {
-            this.mensajeExito = 'Registro completado correctamente.';
+            this.mensajeExito = 'Administrador creado correctamente.';
             this.abrirModal('modalExito');
-            setTimeout(() => this.router.navigate(['/login']), 1500);
           },
           error: (err) => {
             if (err.status === 500) {
               this.usuarioRepetido = true;
               this.mensajeError = 'El nombre de usuario ya está en uso. Por favor, elige otro.';
             } else {
-              this.mensajeError = 'Error al registrar el anunciante.';
+              this.mensajeError = 'Error al registrar el administrador.';
             }
             this.abrirModal('modalError');
+          }
+        });
+      }
+      return;
+    }
+
+    if (this.isAnunciante()) {
+      if (this.modoEdicion) {
+        this.anuncianteService.actualizarAnunciante(datos).subscribe({
+          next: () => {
+            this.mensajeExito = 'Datos actualizados correctamente.';
+            this.abrirModal('modalExito');
+          },
+          error: (err) => {
+            if (err.status === 500) {
+              this.usuarioRepetido = true;
+              this.mensajeError = 'El nombre de usuario ya está en uso. Por favor, elige otro.';
+              this.abrirModal('modalError');
+            } else if (err.status === 200 || err.status === 201) {
+              this.mensajeExito = 'Datos actualizados correctamente.';
+              this.abrirModal('modalExito');
+            } else {
+              this.mensajeError = 'Error al actualizar los datos.';
+              this.abrirModal('modalError');
+            }
+          }
+        });
+      } else {
+        this.anuncianteService.guardarAnunciante(datos).subscribe({
+          next: () => {
+            this.mensajeExito = 'Registro completado correctamente.';
+            this.abrirModal('modalExito');
+          },
+          error: (err) => {
+            if (err.status === 500) {
+              this.usuarioRepetido = true;
+              this.mensajeError = 'El nombre de usuario ya está en uso. Por favor, elige otro.';
+              this.abrirModal('modalError');
+            } else if (err.status === 201 || err.status === 200) {
+              this.mensajeExito = 'Registro completado correctamente.';
+              this.abrirModal('modalExito');
+            } else {
+              this.mensajeError = 'Error al registrar el anunciante.';
+              this.abrirModal('modalError');
+            }
           }
         });
       }
@@ -263,7 +291,6 @@ export class ActorFormComponent implements OnInit {
           next: () => {
             this.mensajeExito = 'Datos actualizados correctamente.';
             this.abrirModal('modalExito');
-            setTimeout(() => this.router.navigate(['/']), 1500);
           },
           error: (err) => {
             if (err.status === 500) {
@@ -280,16 +307,19 @@ export class ActorFormComponent implements OnInit {
           next: () => {
             this.mensajeExito = 'Registro completado correctamente.';
             this.abrirModal('modalExito');
-            setTimeout(() => this.router.navigate(['/login']), 1500);
           },
           error: (err) => {
             if (err.status === 500) {
               this.usuarioRepetido = true;
               this.mensajeError = 'El nombre de usuario ya está en uso. Por favor, elige otro.';
+              this.abrirModal('modalError');
+            } else if (err.status === 201 || err.status === 200) {
+              this.mensajeExito = 'Registro completado correctamente.';
+              this.abrirModal('modalExito');
             } else {
               this.mensajeError = 'Error al registrar el estudiante.';
+              this.abrirModal('modalError');
             }
-            this.abrirModal('modalError');
           }
         });
       }
@@ -301,6 +331,13 @@ export class ActorFormComponent implements OnInit {
     if (modal) {
       // @ts-ignore
       const bsModal = new window.bootstrap.Modal(modal);
+
+      if (id === 'modalExito') {
+        modal.addEventListener('hidden.bs.modal', () => {
+          this.router.navigate(['/']);
+        }, { once: true });
+      }
+
       bsModal.show();
     }
   }

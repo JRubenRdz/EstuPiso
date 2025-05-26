@@ -1,6 +1,7 @@
 package com.estupiso.controller;
 
 import com.estupiso.model.Anunciante;
+import com.estupiso.service.ActorService;
 import com.estupiso.service.AnuncianteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -23,13 +24,16 @@ public class AnuncianteController {
     @Autowired
     private AnuncianteService anuncianteService;
 
+    @Autowired
+    private ActorService actorService;
+
     @PostMapping
     @Operation(summary = "Registrar un anunciante")
     @ApiResponses(value = { @ApiResponse(responseCode = "201", description = "Anunciante creado exitosamente"),
             @ApiResponse(responseCode = "400", description = "Solicitud no válida"),
             @ApiResponse(responseCode = "409", description = "El usuario ya existe")})
     public ResponseEntity<String> saveAnunciante(@RequestBody Anunciante anunciante) {
-        if (anuncianteService.findByUsuario(anunciante.getUsuario()).isPresent()) {
+        if (actorService.findByUsuario(anunciante.getUsuario()).isPresent()) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("El usuario ya existe");
         } else {
             Anunciante a = anuncianteService.createAnunciante(anunciante);

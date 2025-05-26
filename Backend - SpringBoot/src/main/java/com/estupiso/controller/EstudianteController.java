@@ -1,6 +1,7 @@
 package com.estupiso.controller;
 
 import com.estupiso.model.Estudiante;
+import com.estupiso.service.ActorService;
 import com.estupiso.service.EstudianteService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -21,13 +22,16 @@ public class EstudianteController {
     @Autowired
     private EstudianteService estudianteService;
 
+    @Autowired
+    private ActorService actorService;
+
     @PostMapping
     @Operation(summary = "Registrar un estudiante")
     @ApiResponses(value = { @ApiResponse(responseCode = "201", description = "Estudiante creado exitosamente"),
             @ApiResponse(responseCode = "400", description = "Solicitud no válida"),
             @ApiResponse(responseCode = "409", description = "El usuario ya existe")})
     public ResponseEntity<?> saveEstudiante(@RequestBody Estudiante usuario) {
-        if (estudianteService.findByUsuario(usuario.getUsuario()).isPresent()) {
+        if (actorService.findByUsuario(usuario.getUsuario()).isPresent()) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("El usuario ya existe");
         } else {
             Estudiante e = estudianteService.createEstudiante(usuario);

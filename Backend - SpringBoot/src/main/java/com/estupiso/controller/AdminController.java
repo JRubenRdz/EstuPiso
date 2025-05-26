@@ -1,6 +1,7 @@
 package com.estupiso.controller;
 
 import com.estupiso.model.Admin;
+import com.estupiso.service.ActorService;
 import com.estupiso.service.AdminService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -18,6 +19,9 @@ public class AdminController {
 
     @Autowired
     private AdminService adminService;
+
+    @Autowired
+    private ActorService actorService;
 
     @PutMapping
     @Operation(summary = "Actualizar un administrador existente")
@@ -38,7 +42,7 @@ public class AdminController {
             @ApiResponse(responseCode = "400", description = "Solicitud inválida"),
             @ApiResponse(responseCode = "409", description = "El username ya está en uso") })
     public void saveAdmin(@RequestBody Admin admin) {
-        if (adminService.findByUsuario(admin.getUsuario()).isPresent()) {
+        if (actorService.findByUsuario(admin.getUsuario()).isPresent()) {
             ResponseEntity.status(HttpStatus.BAD_REQUEST).body("El username ya está en uso");
         } else {
             Admin a = adminService.createAdmin(admin);

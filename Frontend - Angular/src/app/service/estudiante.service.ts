@@ -12,12 +12,12 @@ export class EstudianteService {
 constructor(private http: HttpClient) { }
   private urlAPI = environment.apiUrl + '/estudiante';
   
-  guardarEstudiante(estudiante: any): Observable<void> {
+  guardarEstudiante(estudiante: any): Observable<any> {
     return this.http.post<any>(`${this.urlAPI}`, estudiante);
   }
   
-  actualizarEstudiante(estudiante: any): Observable<void> {
-    return this.http.put<void>(`${this.urlAPI}`, estudiante);
+  actualizarEstudiante(estudiante: any): Observable<any> {
+    return this.http.put<any>(`${this.urlAPI}`, estudiante);
   }
 
   getAllEstudiantes(): Observable<any[]> {

@@ -1,8 +1,9 @@
 package com.estupiso.controller;
 
-import com.estupiso.model.Comunidad;
+import com.estupiso.dto.ComunidadDto;
+import com.estupiso.dto.MunicipioDto;
+import com.estupiso.dto.ProvinciaDto;
 import com.estupiso.model.Municipio;
-import com.estupiso.model.Provincia;
 import com.estupiso.service.ComunidadService;
 import com.estupiso.service.MunicipioService;
 import com.estupiso.service.ProvinciaService;
@@ -12,13 +13,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
 
 @RestController
-@Tag(name = "Anunciante", description = "Endpoints para la consulta de comunidades, provincias y municipios")
+@Tag(name = "Ubicacion", description = "Endpoints para la consulta de comunidades, provincias y municipios")
 public class UbicacionController {
 
     @Autowired
@@ -31,21 +31,21 @@ public class UbicacionController {
     private MunicipioService municipioService;
 
     @GetMapping("/comunidades")
-    @Operation(summary = "Listar todos las comunidades")
-    public ResponseEntity<List<Comunidad>> findAllComunidades() {
-        return ResponseEntity.ok(comunidadService.findAll());
+    @Operation(summary = "Listar todas las comunidades (solo nombres)")
+    public ResponseEntity<List<ComunidadDto>> findAllComunidades() {
+        return ResponseEntity.ok(comunidadService.findAllSinProvincias());
     }
 
-    @GetMapping("/provincias")
-    @Operation(summary = "Listar todas las provincias")
-    public ResponseEntity<List<Provincia>> findAllProvincias() {
-        return ResponseEntity.ok(provinciaService.findAll());
+    @GetMapping("/provincias/comunidad/{comunidadId}")
+    @Operation(summary = "Obtener provincias por comunidad")
+    public ResponseEntity<List<ProvinciaDto>> findProvinciasByComunidad(@PathVariable int comunidadId) {
+        return ResponseEntity.ok(provinciaService.findByComunidadId(comunidadId));
     }
 
-    @GetMapping("/municipios")
-    @Operation(summary = "Listar todos los municipios")
-    public ResponseEntity<List<Municipio>> findAllMunicipios() {
-        return ResponseEntity.ok(municipioService.findAll());
+    @GetMapping("/municipios/provincia/{provinciaId}")
+    @Operation(summary = "Obtener municipios por provincia")
+    public ResponseEntity<List<MunicipioDto>> findMunicipiosByProvincia(@PathVariable int provinciaId) {
+        return ResponseEntity.ok(municipioService.findByProvinciaId(provinciaId));
     }
 
 }

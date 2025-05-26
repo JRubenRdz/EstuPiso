@@ -13,15 +13,23 @@ constructor(private http: HttpClient) { }
 private urlApi = environment.apiUrl;
 
 getAllComunidades(): Observable<any[]> {
-  return this.http.get<any[]>(`${this.urlApi}/comunidad`);
+  return this.http.get<any[]>(`${this.urlApi}/comunidades`);
 }
 
 getAllProvincias(): Observable<any[]> {
-  return this.http.get<any[]>(`${this.urlApi}/provincia`);
+  return this.http.get<any[]>(`${this.urlApi}/provincias`);
+}
+
+getProvinciasByComunidad(comunidadId: number): Observable<any[]> {
+  return this.http.get<any[]>(`${this.urlApi}/provincias/comunidad/${comunidadId}`);
 }
 
 getAllMunicipios(): Observable<any[]> {
-  return this.http.get<any[]>(`${this.urlApi}/municipio`);
+  return this.http.get<any[]>(`${this.urlApi}/municipios`);
+}
+
+getMunicipiosByProvincia(provinciaId: number): Observable<any[]> {
+  return this.http.get<any[]>(`${this.urlApi}/municipios/provincia/${provinciaId}`);
 }
 
 }

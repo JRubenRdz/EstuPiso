@@ -11,5 +11,5 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface MunicipioRepository extends JpaRepository<Municipio, Integer> {
    public Optional<Municipio> findByNombre(String nombre);
-   public List<Municipio> findByProvincia (Provincia provincia);
+   public List<Municipio> findByProvincia(Provincia provincia);
 }

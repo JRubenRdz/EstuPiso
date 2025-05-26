@@ -9,5 +9,6 @@ export const routes: Routes = [
   {path: 'register', component: ActorFormComponent},
   {path: 'mis-datos', component: ActorFormComponent},
   {path: 'create-user', component: ActorFormComponent},
-  {path: 'nuevo-anuncio', component: ViviendaFormComponent}
+  {path: 'nuevo-anuncio', component: ViviendaFormComponent},
+  {path: 'editar-vivienda/:id', component: ViviendaFormComponent}
 ];

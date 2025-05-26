@@ -1,6 +1,12 @@
 package com.estupiso.model;
 
-import jakarta.persistence.*;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIdentityInfo;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.annotation.ObjectIdGenerators;
+import jakarta.persistence.Entity;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import jakarta.validation.constraints.NotBlank;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -25,6 +31,7 @@ public class Municipio extends DomainEntity{
 
     @ManyToOne
     @JoinColumn(name = "provincia_id", nullable = false)
+    @JsonBackReference
     private Provincia provincia;
 
 }

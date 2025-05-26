@@ -1,0 +1,315 @@
+<div class="container-fluid py-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-lg-8 col-xl-6">
+      <div class="card shadow-lg border-0 animate-card">
+        <div class="card-header bg-primary text-white text-center py-3">
+          <h3 class="mb-0">
+            <i class="bi bi-house-add-fill me-2"></i>
+            {{ isEditMode ? 'Editar Vivienda' : 'Nueva Vivienda' }}
+          </h3>
+        </div>
+
+        <div class="card-body p-4">
+          <!-- Loading spinner -->
+          <div *ngIf="isLoading" class="text-center py-5">
+            <div class="spinner-border text-primary" role="status">
+              <span class="visually-hidden">Cargando...</span>
+            </div>
+            <p class="text-muted mt-3">Cargando datos de la vivienda...</p>
+          </div>
+
+          <!-- Formulario principal -->
+          <form *ngIf="!isLoading" [formGroup]="viviendaForm" (ngSubmit)="onSubmit()" novalidate>
+            
+            <!-- Sección de Ubicación -->
+            <div class="form-section mb-4">
+              <h5 class="section-title text-primary mb-3">
+                <i class="bi bi-geo-alt-fill me-2"></i>
+                Ubicación
+              </h5>
+              
+              <div class="row g-3">
+                <!-- Comunidad Autónoma -->
+                <div class="col-md-4">
+                  <label for="comunidad" class="form-label">
+                    Comunidad Autónoma <span class="text-danger">*</span>
+                  </label>
+                  <select 
+                    id="comunidad"
+                    class="form-select animate-input"
+                    formControlName="comunidad"
+                    [class.is-invalid]="isFieldInvalid('comunidad')">
+                    <option value="">Seleccionar comunidad</option>
+                    <option *ngFor="let comunidad of comunidades" [value]="comunidad.nombre">
+                      {{ comunidad.nombre }}
+                    </option>
+                  </select>
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('comunidad')">
+                    {{ getFieldError('comunidad') }}
+                  </div>
+                </div>
+
+                <!-- Provincia -->
+                <div class="col-md-4">
+                  <label for="provincia" class="form-label">
+                    Provincia <span class="text-danger">*</span>
+                  </label>
+                  <div class="position-relative">
+                    <select 
+                      id="provincia"
+                      class="form-select animate-input"
+                      formControlName="provincia"
+                      [class.is-invalid]="isFieldInvalid('provincia')"
+                      [disabled]="!viviendaForm.get('comunidad')?.value || loadingProvincias">
+                      <option value="">Seleccionar provincia</option>
+                      <option *ngFor="let provincia of provinciasFiltradas" [value]="provincia.nombre">
+                        {{ provincia.nombre }}
+                      </option>
+                    </select>
+                    <div *ngIf="loadingProvincias" class="loading-overlay">
+                      <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    </div>
+                  </div>
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('provincia')">
+                    {{ getFieldError('provincia') }}
+                  </div>
+                </div>
+
+                <!-- Municipio -->
+                <div class="col-md-4">
+                  <label for="municipio" class="form-label">
+                    Municipio <span class="text-danger">*</span>
+                  </label>
+                  <div class="position-relative">
+                    <select 
+                      id="municipio"
+                      class="form-select animate-input"
+                      formControlName="municipio"
+                      [class.is-invalid]="isFieldInvalid('municipio')"
+                      [disabled]="!viviendaForm.get('provincia')?.value || loadingMunicipios">
+                      <option value="">Seleccionar municipio</option>
+                      <option *ngFor="let municipio of municipiosFiltrados" [value]="municipio.nombre">
+                        {{ municipio.nombre }}
+                      </option>
+                    </select>
+                    <div *ngIf="loadingMunicipios" class="loading-overlay">
+                      <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                    </div>
+                  </div>
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('municipio')">
+                    {{ getFieldError('municipio') }}
+                  </div>
+                </div>
+              </div>
+
+              <!-- Dirección -->
+              <div class="row g-3 mt-2">
+                <div class="col-md-8">
+                  <label for="calle" class="form-label">
+                    Calle <span class="text-danger">*</span>
+                  </label>
+                  <input 
+                    type="text"
+                    id="calle"
+                    class="form-control animate-input"
+                    formControlName="calle"
+                    placeholder="Ej: Calle Gran Vía"
+                    [class.is-invalid]="isFieldInvalid('calle')">
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('calle')">
+                    {{ getFieldError('calle') }}
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <label for="numero" class="form-label">
+                    Número <span class="text-danger">*</span>
+                  </label>
+                  <input 
+                    type="text"
+                    id="numero"
+                    class="form-control animate-input"
+                    formControlName="numero"
+                    placeholder="Ej: 123A"
+                    [class.is-invalid]="isFieldInvalid('numero')">
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('numero')">
+                    {{ getFieldError('numero') }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sección de Información Básica -->
+            <div class="form-section mb-4">
+              <h5 class="section-title text-primary mb-3">
+                <i class="bi bi-info-circle-fill me-2"></i>
+                Información Básica
+              </h5>
+              
+              <div class="row g-3">
+                <div class="col-md-6">
+                  <label for="tipoVivienda" class="form-label">
+                    Tipo de Vivienda <span class="text-danger">*</span>
+                  </label>
+                  <select 
+                    id="tipoVivienda"
+                    class="form-select animate-input"
+                    formControlName="tipoVivienda"
+                    [class.is-invalid]="isFieldInvalid('tipoVivienda')">
+                    <option value="">Seleccionar tipo</option>
+                    <option *ngFor="let tipo of tiposVivienda" [value]="tipo">
+                      {{ tipo }}
+                    </option>
+                  </select>
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('tipoVivienda')">
+                    {{ getFieldError('tipoVivienda') }}
+                  </div>
+                </div>
+
+                <div class="col-md-3">
+                  <label for="numeroHabitaciones" class="form-label">
+                    Habitaciones <span class="text-danger">*</span>
+                  </label>
+                  <input 
+                    type="number"
+                    id="numeroHabitaciones"
+                    class="form-control animate-input"
+                    formControlName="numeroHabitaciones"
+                    min="1"
+                    max="20"
+                    placeholder="1"
+                    [class.is-invalid]="isFieldInvalid('numeroHabitaciones')">
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('numeroHabitaciones')">
+                    {{ getFieldError('numeroHabitaciones') }}
+                  </div>
+                </div>
+
+                <div class="col-md-3">
+                  <label for="precioMensual" class="form-label">
+                    Precio (€/mes) <span class="text-danger">*</span>
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text">€</span>
+                    <input 
+                      type="number"
+                      id="precioMensual"
+                      class="form-control animate-input"
+                      formControlName="precioMensual"
+                      min="1"
+                      max="9999"
+                      placeholder="600"
+                      [class.is-invalid]="isFieldInvalid('precioMensual')">
+                  </div>
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('precioMensual')">
+                    {{ getFieldError('precioMensual') }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Sección de Descripción -->
+            <div class="form-section mb-4">
+              <h5 class="section-title text-primary mb-3">
+                <i class="bi bi-card-text me-2"></i>
+                Descripción
+              </h5>
+              
+              <div class="mb-3">
+                <label for="descripcion" class="form-label">
+                  Descripción de la vivienda <span class="text-danger">*</span>
+                </label>
+                <textarea 
+                  id="descripcion"
+                  class="form-control animate-input"
+                  formControlName="descripcion"
+                  rows="5"
+                  placeholder="Describe las características de tu vivienda, servicios incluidos, ubicación, etc."
+                  [class.is-invalid]="isFieldInvalid('descripcion')"></textarea>
+                <div class="form-text">
+                  Mínimo 10 caracteres, máximo 1000 caracteres
+                </div>
+                <div class="invalid-feedback" *ngIf="isFieldInvalid('descripcion')">
+                  {{ getFieldError('descripcion') }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Botones de acción -->
+            <div class="form-actions d-flex gap-3 justify-content-end">
+              <button 
+                type="button" 
+                class="btn btn-outline-secondary btn-lg"
+                (click)="onCancel()"
+                [disabled]="isSubmitting">
+                <i class="bi bi-x-circle me-2"></i>
+                Cancelar
+              </button>
+              
+              <button 
+                type="submit" 
+                class="btn btn-primary btn-lg"
+                [disabled]="viviendaForm.invalid || isSubmitting">
+                <span *ngIf="isSubmitting" class="spinner-border spinner-border-sm me-2" role="status"></span>
+                <i *ngIf="!isSubmitting" class="bi bi-check-circle me-2"></i>
+                {{ isSubmitting ? 'Guardando...' : (isEditMode ? 'Actualizar' : 'Crear Vivienda') }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Éxito -->
+<div class="modal fade" id="successModal" tabindex="-1" aria-labelledby="successModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-success text-white">
+        <h5 class="modal-title" id="successModalLabel">
+          <i class="bi bi-check-circle-fill me-2"></i>
+          ¡Éxito!
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center py-4">
+        <div class="success-animation mb-3">
+          <i class="bi bi-check-circle-fill text-success" style="font-size: 3rem;"></i>
+        </div>
+        <p class="mb-0 fs-5">{{ modalMessage }}</p>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-success" data-bs-dismiss="modal">
+          <i class="bi bi-arrow-right me-2"></i>
+          Continuar
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Modal de Error -->
+<div class="modal fade" id="errorModal" tabindex="-1" aria-labelledby="errorModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-danger text-white">
+        <h5 class="modal-title" id="errorModalLabel">
+          <i class="bi bi-exclamation-triangle-fill me-2"></i>
+          Error
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body text-center py-4">
+        <div class="error-animation mb-3">
+          <i class="bi bi-exclamation-triangle-fill text-danger" style="font-size: 3rem;"></i>
+        </div>
+        <p class="mb-0 fs-5">{{ modalMessage }}</p>
+      </div>
+      <div class="modal-footer justify-content-center">
+        <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
+          <i class="bi bi-arrow-left me-2"></i>
+          Volver
+        </button>
+      </div>
+    </div>
+  </div>
+</div>

@@ -12,10 +12,10 @@ public abstract class DomainEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private int id;
+    private Integer id;
 
     @Version
-    private int version;
+    private Integer version;
 
     public DomainEntity() {
         super();

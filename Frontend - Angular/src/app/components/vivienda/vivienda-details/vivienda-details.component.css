@@ -1,0 +1,330 @@
+/* Animaciones generales */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Cards principales */
+.image-card, .info-card, .description-card, .residents-card {
+  animation: fadeInUp 0.6s ease-out;
+  transition: all 0.3s ease;
+}
+
+.info-card {
+  animation: slideInRight 0.6s ease-out;
+  animation-delay: 0.2s;
+  animation-fill-mode: both;
+}
+
+.image-card:hover, .info-card:hover, .description-card:hover, .residents-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Carrusel de imágenes */
+.carousel-image {
+  height: 500px;
+  object-fit: cover;
+  border-radius: 0.75rem;
+}
+
+.carousel-fade .carousel-item {
+  opacity: 0;
+  transition-property: opacity;
+  transform: none;
+}
+
+.carousel-fade .carousel-item.active {
+  opacity: 1;
+}
+
+.carousel-indicators button {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin: 0 5px;
+  background-color: rgba(255, 255, 255, 0.5);
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  transition: all 0.3s ease;
+}
+
+.carousel-indicators button.active {
+  background-color: white;
+  transform: scale(1.2);
+}
+
+.carousel-control-prev, .carousel-control-next {
+  width: 8%;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.carousel:hover .carousel-control-prev,
+.carousel:hover .carousel-control-next {
+  opacity: 1;
+}
+
+.carousel-control-prev-icon, .carousel-control-next-icon {
+  background-size: 20px 20px;
+  width: 40px;
+  height: 40px;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-radius: 50%;
+  transition: all 0.3s ease;
+}
+
+.carousel-control-prev:hover .carousel-control-prev-icon,
+.carousel-control-next:hover .carousel-control-next-icon {
+  background-color: rgba(0, 0, 0, 0.8);
+  transform: scale(1.1);
+}
+
+/* Sección de precio */
+.price-section {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 15px;
+  padding: 1.5rem;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  animation: pulse 2s infinite;
+}
+
+/* Items de información */
+.info-item {
+  background: rgba(0, 0, 0, 0.02);
+  border-radius: 12px;
+  padding: 1rem;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.info-item:hover {
+  background: rgba(0, 123, 255, 0.05);
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Secciones de información */
+.location-section, .owner-section, .dates-section {
+  background: rgba(0, 0, 0, 0.01);
+  border-radius: 12px;
+  padding: 1rem;
+  border-left: 4px solid #007bff;
+  transition: all 0.3s ease;
+}
+
+.location-section:hover, .owner-section:hover {
+  background: rgba(0, 123, 255, 0.02);
+  border-left-color: #0056b3;
+  transform: translateX(5px);
+}
+
+/* Avatar placeholder */
+.avatar-placeholder {
+  transition: transform 0.3s ease;
+}
+
+.avatar-placeholder:hover {
+  transform: scale(1.1);
+}
+
+/* Cards de residentes */
+.residents-card .card {
+  transition: all 0.3s ease;
+}
+
+.residents-card .card:hover {
+  background: rgba(0, 123, 255, 0.05) !important;
+  transform: translateY(-3px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+}
+
+/* Badges animados */
+.badge {
+  transition: all 0.3s ease;
+}
+
+.badge:hover {
+  transform: scale(1.05);
+}
+
+/* Botones */
+.btn {
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Loading spinner */
+.spinner-border {
+  animation: spin 1s linear infinite;
+}
+
+/* Estilos para la información de contacto */
+.contact-info {
+  display: flex;
+  align-items: center;
+  font-size: 0.9rem;
+}
+
+.contact-info a {
+  color: #495057;
+  transition: color 0.3s ease;
+}
+
+.contact-info a:hover {
+  color: #007bff;
+  text-decoration: underline;
+}
+
+/* Mejorar el card del anunciante */
+.owner-card .card-body {
+  position: relative;
+}
+
+.owner-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 0.75rem 0.75rem 0 0;
+}
+
+/* Estilos para los botones de contacto */
+.btn-sm {
+  font-size: 0.8rem;
+  padding: 0.4rem 0.8rem;
+}
+
+/* Card de fechas más compacto */
+.dates-card {
+  border-left: 4px solid #6c757d;
+}
+
+.dates-card .card-body {
+  padding: 1.5rem !important;
+}
+
+/* Mapa */
+.map-card {
+  animation: fadeInUp 0.6s ease-out;
+  animation-delay: 0.4s;
+  animation-fill-mode: both;
+}
+
+.map-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1) !important;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .carousel-image {
+    height: 300px;
+  }
+  
+  .price-section {
+    padding: 1rem;
+  }
+  
+  .info-item {
+    padding: 0.75rem;
+  }
+  
+  .location-section, .owner-section, .dates-section {
+    padding: 0.75rem;
+  }
+  
+  .map-card .card-body {
+    padding: 1rem !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .carousel-image {
+    height: 250px;
+  }
+  
+  .carousel-control-prev, .carousel-control-next {
+    width: 15%;
+  }
+  
+  .carousel-indicators {
+    bottom: 10px;
+  }
+}
+
+/* Mejora para el carrusel en dispositivos táctiles */
+@media (hover: none) {
+  .carousel-control-prev, .carousel-control-next {
+    opacity: 1;
+  }
+}
+
+/* Animación de entrada para elementos */
+.card-body > * {
+  animation: fadeInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+.card-body > *:nth-child(1) { animation-delay: 0.1s; }
+.card-body > *:nth-child(2) { animation-delay: 0.2s; }
+.card-body > *:nth-child(3) { animation-delay: 0.3s; }
+.card-body > *:nth-child(4) { animation-delay: 0.4s; }
+.card-body > *:nth-child(5) { animation-delay: 0.5s; }
+
+@media (max-width: 991.98px) {
+  .description-card {
+    margin-bottom: 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .contact-info {
+    font-size: 0.85rem;
+  }
+  
+  .btn-sm {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+  }
+  
+  .d-flex.gap-2 {
+    flex-direction: column;
+    gap: 0.5rem !important;
+  }
+}

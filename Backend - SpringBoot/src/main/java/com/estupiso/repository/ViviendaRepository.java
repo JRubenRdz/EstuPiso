@@ -13,5 +13,5 @@ import java.util.List;
 public interface ViviendaRepository extends JpaRepository<Vivienda, Integer>, JpaSpecificationExecutor<Vivienda> {
     public Optional<Vivienda> findByNombre(String nombre);
 
-    public Optional<List<Vivienda>> findAllByAnunciante(Anunciante anunciante);
+    public Optional<List<Vivienda>> findAllByAnuncianteId(int idAnunciante);
 }

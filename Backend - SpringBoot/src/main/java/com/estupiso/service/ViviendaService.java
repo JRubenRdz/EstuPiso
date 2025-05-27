@@ -1,5 +1,6 @@
 package com.estupiso.service;
 
+import com.estupiso.dto.ViviendaDto;
 import com.estupiso.model.Anunciante;
 import com.estupiso.model.Estudiante;
 import com.estupiso.model.FotoVivienda;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.ArrayList;
 
@@ -39,6 +41,7 @@ public class ViviendaService {
     @Autowired
     private FotoViviendaService fotoViviendaService;
 
+    /*
     public List<Vivienda> findByAnunciante(int id) {
         Optional<Anunciante> anunciante = anuncianteService.findById(id);
         if (anunciante.isPresent()) {
@@ -46,18 +49,49 @@ public class ViviendaService {
         }
         return null;
     }
+    */
 
-    public List<Vivienda> findAllViviendas() {
+
+    public List<Vivienda> findAllViviendasByAnunciante() {
         Anunciante userLogin = jwtUtils.userLogin();
         if (userLogin != null) {
-           Optional<List<Vivienda>> viviendasO = viviendaRepository.findAllByAnunciante(userLogin);
+           Optional<List<Vivienda>> viviendasO = viviendaRepository.findAllByAnuncianteId(userLogin.getId());
             return viviendasO.orElse(null);
         }
         return null;
     }
 
-    public Optional<Vivienda> findById(int id) {
-        return viviendaRepository.findById(id);
+    public List<Vivienda> findAllViviendas() {
+        return viviendaRepository.findAll();
+    }
+
+    public ViviendaDto findById(int id) {
+        Optional<Vivienda> v = viviendaRepository.findById(id);
+        ViviendaDto vDto = new ViviendaDto();
+        if (v.isPresent()) {
+            vDto.setId(v.get().getId());
+            vDto.setTipoVivienda(v.get().getTipoVivienda());
+            vDto.setCalle(v.get().getCalle());
+            vDto.setPrecioMensual(v.get().getPrecioMensual());
+            vDto.setNumero(v.get().getNumero());
+            vDto.setComunidad(v.get().getComunidad());
+            vDto.setProvincia(v.get().getProvincia());
+            vDto.setMunicipio(v.get().getMunicipio());
+            vDto.setDescripcion(v.get().getDescripcion());
+            vDto.setNumeroHabitaciones(v.get().getNumeroHabitaciones());
+            vDto.setAnuncianteEmail(v.get().getAnunciante().getEmail());
+            vDto.setNombre(v.get().getNombre());
+            vDto.setFotos(v.get().getFotos());
+            vDto.setAnuncianteId(v.get().getAnunciante().getId());
+            vDto.setAnuncianteNombre(v.get().getAnunciante().getNombre());
+            vDto.setFotos(v.get().getFotos());
+            vDto.setUltimaEdicion(v.get().getUltimaEdicion());
+            vDto.setFechaPublicacion(v.get().getFechaPublicacion());
+            vDto.setResidentes(v.get().getResidentes());
+            vDto.setAnuncianteTelefono(v.get().getAnunciante().getTelefono());
+            return vDto;
+        }
+        return null;
     }
 
     public Page<Vivienda> buscarViviendas(String comunidad, String provincia, String municipio,
@@ -135,20 +169,38 @@ public class ViviendaService {
         Optional<Vivienda> viviendaO = viviendaRepository.findById(viviendaU.getId());
         if (viviendaO.isPresent()) {
             Anunciante anuncianteLogin = jwtUtils.userLogin();
-            if (anuncianteLogin != null && anuncianteLogin.getViviendas().contains(viviendaU)) {
-                viviendaO.get().setUltimaEdicion(LocalDateTime.now());
-                viviendaO.get().setTipoVivienda(viviendaU.getTipoVivienda());
-                viviendaO.get().setCalle(viviendaU.getCalle());
-                viviendaO.get().setPrecioMensual(viviendaU.getPrecioMensual());
-                viviendaO.get().setNumero(viviendaU.getNumero());
-                viviendaO.get().setComunidad(viviendaU.getComunidad());
-                viviendaO.get().setProvincia(viviendaU.getProvincia());
-                viviendaO.get().setMunicipio(viviendaU.getMunicipio());
-                viviendaO.get().setDescripcion(viviendaU.getDescripcion());
-                viviendaO.get().setFotos(viviendaU.getFotos());
-                viviendaO.get().setNumeroHabitaciones(viviendaU.getNumeroHabitaciones());
-                viviendaO.get().setNombre(viviendaU.getNombre());
-                return viviendaRepository.save(viviendaO.get());
+            if (anuncianteLogin != null && Objects.equals(viviendaU.getAnunciante().getId(), anuncianteLogin.getId())) {
+                Vivienda viviendaExistente = viviendaO.get();
+                
+                // Actualizar campos básicos
+                viviendaExistente.setUltimaEdicion(LocalDateTime.now());
+                viviendaExistente.setTipoVivienda(viviendaU.getTipoVivienda());
+                viviendaExistente.setCalle(viviendaU.getCalle());
+                viviendaExistente.setPrecioMensual(viviendaU.getPrecioMensual());
+                viviendaExistente.setNumero(viviendaU.getNumero());
+                viviendaExistente.setComunidad(viviendaU.getComunidad());
+                viviendaExistente.setProvincia(viviendaU.getProvincia());
+                viviendaExistente.setMunicipio(viviendaU.getMunicipio());
+                viviendaExistente.setDescripcion(viviendaU.getDescripcion());
+                viviendaExistente.setNumeroHabitaciones(viviendaU.getNumeroHabitaciones());
+                viviendaExistente.setNombre(viviendaU.getNombre());
+                
+                // Gestión de fotos usando métodos helper
+                if (viviendaU.getFotos() != null) {
+                    // Usar el método helper para limpiar fotos
+                    viviendaExistente.clearFotos();
+                    
+                    // Añadir las nuevas fotos usando el método helper
+                    for (FotoVivienda nuevaFoto : viviendaU.getFotos()) {
+                        if (nuevaFoto.getImagen() != null && !nuevaFoto.getImagen().isEmpty()) {
+                            FotoVivienda foto = new FotoVivienda();
+                            foto.setImagen(nuevaFoto.getImagen());
+                            viviendaExistente.addFoto(foto);
+                        }
+                    }
+                }
+                
+                return viviendaRepository.save(viviendaExistente);
             }
         }
         return null;

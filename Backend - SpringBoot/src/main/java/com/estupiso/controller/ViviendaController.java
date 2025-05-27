@@ -1,5 +1,6 @@
 package com.estupiso.controller;
 
+import com.estupiso.dto.ViviendaDto;
 import com.estupiso.model.Anunciante;
 import com.estupiso.model.Vivienda;
 import com.estupiso.service.ViviendaService;
@@ -59,18 +60,20 @@ public class ViviendaController {
         return ResponseEntity.ok(viviendaService.findAllViviendas());
     }
 
-    @GetMapping("/anunciante/{id}")
-    @Operation(summary = "Obtener viviendas por anunciante")
-    public ResponseEntity<?> findByAnunciante(@PathVariable int id) {
-        return ResponseEntity.ok(viviendaService.findByAnunciante(id));
+    @GetMapping("/all/user-login")
+    @Operation(summary = "Listar todas las viviendas de un anunciante")
+    public ResponseEntity<?> findAllViviendasByAnunciante() {
+        return ResponseEntity.ok(viviendaService.findAllViviendasByAnunciante());
     }
 
     @GetMapping("/{id}")
     @Operation(summary = "Obtener una vivienda por su id")
-    public ResponseEntity<Vivienda> findById(@PathVariable int id) {
-        Optional<Vivienda> vivienda = viviendaService.findById(id);
-        return vivienda.map(ResponseEntity::ok)
-                .orElse(ResponseEntity.notFound().build());
+    public ResponseEntity<ViviendaDto> findById(@PathVariable int id) {
+        ViviendaDto vivienda = viviendaService.findById(id);
+        if (vivienda != null) {
+            return ResponseEntity.ok(vivienda);
+        }
+        return ResponseEntity.notFound().build();
     }
 
     @GetMapping("/buscar")
@@ -91,7 +94,7 @@ public class ViviendaController {
         return ResponseEntity.ok(resultados);
     }
 
-    @GetMapping("/{idVivienda}/residente/{idResidente}")
+    @PostMapping("/{idVivienda}/residente/{idResidente}")
     @Operation(summary = "Añadir un residente a una vivienda")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Residente añadido exitosamente"),

@@ -1,5 +1,5 @@
-<div *ngIf="mostrarFormulario; else accesoDenegado" class="container d-flex justify-content-center align-items-center min-vh-100">
-  <div class="card shadow p-4" style="min-width: 350px; max-width: 500px; width: 100%;">
+<div *ngIf="mostrarFormulario; else accesoDenegado" class="container"> <!-- <-- Remover clases d-flex, justify-content-center, align-items-center, min-vh-100 -->
+  <div class="card shadow p-4" style="min-width: 350px;">
     <div class="text-center mb-4">
       <i class="bi bi-person-circle fs-1 text-primary"></i>
       <h3 class="mt-2">{{ titulo }}</h3>
@@ -101,8 +101,9 @@
     </div>
   </div>
 </div>
+
 <ng-template #accesoDenegado>
-  <div class="container d-flex justify-content-center align-items-center min-vh-100">
+  <div class="container"> <!-- <-- Remover clases d-flex, justify-content-center, align-items-center, min-vh-100 -->
     <div class="alert alert-danger text-center">
       <i class="bi bi-exclamation-triangle-fill me-2"></i>
       No tienes permiso para acceder a esta página.

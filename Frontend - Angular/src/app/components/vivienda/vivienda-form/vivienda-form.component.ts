@@ -256,11 +256,9 @@ export class ViviendaFormComponent implements OnInit {
       this.fotosArray.push(this.createFotoControl());
     }
 
+    // Primero llenar los datos básicos
     this.viviendaForm.patchValue({
       nombre: vivienda.nombre,
-      comunidad: vivienda.comunidad,
-      provincia: vivienda.provincia,
-      municipio: vivienda.municipio,
       calle: vivienda.calle,
       numero: vivienda.numero,
       descripcion: vivienda.descripcion,
@@ -268,6 +266,59 @@ export class ViviendaFormComponent implements OnInit {
       tipoVivienda: vivienda.tipoVivienda,
       numeroHabitaciones: vivienda.numeroHabitaciones
     });
+
+    // Cargar datos de ubicación de forma secuencial
+    this.loadLocationDataForEdit(vivienda);
+  }
+
+  // Nuevo método para cargar ubicación en modo edición
+  private loadLocationDataForEdit(vivienda: any): void {
+    // 1. Primero cargar comunidad
+    if (vivienda.comunidad) {
+      this.viviendaForm.patchValue({ comunidad: vivienda.comunidad });
+      
+      // 2. Buscar y cargar provincias de esa comunidad
+      const comunidadSeleccionada = this.comunidades.find(c => c.nombre === vivienda.comunidad);
+      if (comunidadSeleccionada) {
+        this.loadingProvincias = true;
+        this.ubicacionService.getProvinciasByComunidad(comunidadSeleccionada.id).subscribe({
+          next: (provincias) => {
+            this.provinciasFiltradas = provincias;
+            this.loadingProvincias = false;
+            
+            // 3. Después de cargar provincias, establecer la provincia
+            if (vivienda.provincia) {
+              this.viviendaForm.patchValue({ provincia: vivienda.provincia });
+              
+              // 4. Buscar y cargar municipios de esa provincia
+              const provinciaSeleccionada = this.provinciasFiltradas.find(p => p.nombre === vivienda.provincia);
+              if (provinciaSeleccionada) {
+                this.loadingMunicipios = true;
+                this.ubicacionService.getMunicipiosByProvincia(provinciaSeleccionada.id).subscribe({
+                  next: (municipios) => {
+                    this.municipiosFiltrados = municipios;
+                    this.loadingMunicipios = false;
+                    
+                    // 5. Finalmente establecer el municipio
+                    if (vivienda.municipio) {
+                      this.viviendaForm.patchValue({ municipio: vivienda.municipio });
+                    }
+                  },
+                  error: (error) => {
+                    console.error('Error al cargar municipios para edición:', error);
+                    this.loadingMunicipios = false;
+                  }
+                });
+              }
+            }
+          },
+          error: (error) => {
+            console.error('Error al cargar provincias para edición:', error);
+            this.loadingProvincias = false;
+          }
+        });
+      }
+    }
   }
 
   onSubmit(): void {
@@ -309,47 +360,57 @@ export class ViviendaFormComponent implements OnInit {
 
     if (this.isEditMode && this.viviendaId) {
       viviendaPayload.id = this.viviendaId;
-    }
-
-    const request = this.isEditMode 
-      ? this.viviendaService.actualizarVivienda(viviendaPayload)
-      : this.viviendaService.crearVivienda(viviendaPayload);
-
-    request.subscribe({
-      next: (response) => {
-        console.log('Respuesta exitosa:', response);
-        this.modalMessage = this.isEditMode 
-          ? 'Vivienda actualizada correctamente'
-          : 'Vivienda creada correctamente';
-        this.showSuccessModal = true;
-        this.isSubmitting = false;
-      },
-      error: (error) => {
-        console.error('Error completo:', error);
-        
-        if (error.status === 201) {
+      
+      this.viviendaService.actualizarVivienda(viviendaPayload).subscribe({
+        next: (viviendaActualizada) => { // <-- Ahora recibe la vivienda actualizada
+          this.modalMessage = 'Vivienda actualizada correctamente';
+          this.showSuccessModal = true;
+          this.isSubmitting = false;
+        },
+        error: (error) => {
+          console.error('Error al actualizar vivienda:', error);
+          this.modalMessage = 'Error al actualizar la vivienda: ' + (error.error?.message || 'Error desconocido');
+          this.showErrorModal = true;
+          this.isSubmitting = false;
+        }
+      });
+    } else {
+      this.viviendaService.crearVivienda(viviendaPayload).subscribe({
+        next: (response) => {
+          console.log('Respuesta exitosa:', response);
           this.modalMessage = this.isEditMode 
             ? 'Vivienda actualizada correctamente'
             : 'Vivienda creada correctamente';
           this.showSuccessModal = true;
           this.isSubmitting = false;
-          return;
+        },
+        error: (error) => {
+          console.error('Error completo:', error);
+          
+          if (error.status === 201) {
+            this.modalMessage = this.isEditMode 
+              ? 'Vivienda actualizada correctamente'
+              : 'Vivienda creada correctamente';
+            this.showSuccessModal = true;
+            this.isSubmitting = false;
+            return;
+          }
+          
+          if (error.status === 400 && error.error) {
+            this.modalMessage = error.error.message || 'Error de validación en los datos';
+          } else if (error.status === 409) {
+            this.modalMessage = 'Ya existe una vivienda en esa dirección';
+          } else {
+            this.modalMessage = this.isEditMode 
+              ? 'Error al actualizar la vivienda'
+              : 'Error al crear la vivienda';
+          }
+          
+          this.showErrorModal = true;
+          this.isSubmitting = false;
         }
-        
-        if (error.status === 400 && error.error) {
-          this.modalMessage = error.error.message || 'Error de validación en los datos';
-        } else if (error.status === 409) {
-          this.modalMessage = 'Ya existe una vivienda en esa dirección';
-        } else {
-          this.modalMessage = this.isEditMode 
-            ? 'Error al actualizar la vivienda'
-            : 'Error al crear la vivienda';
-        }
-        
-        this.showErrorModal = true;
-        this.isSubmitting = false;
-      }
-    });
+      });
+    }
   }
 
   markFormGroupTouched(): void {

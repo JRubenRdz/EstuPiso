@@ -13,6 +13,7 @@ import lombok.Setter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.Iterator;
 import java.util.List;
 
 @Getter
@@ -67,8 +68,7 @@ public class Vivienda extends DomainEntity {
     @JsonManagedReference
     private List<Estudiante> residentes = new ArrayList<>();
 
-    @OneToMany(mappedBy = "vivienda", cascade = CascadeType.REMOVE, orphanRemoval = true)
-    @JsonManagedReference
+    @OneToMany(mappedBy = "vivienda", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<FotoVivienda> fotos = new ArrayList<>();
 
     public void añadirResidente(Estudiante estudiante) {
@@ -77,4 +77,31 @@ public class Vivienda extends DomainEntity {
         }
         estudiante.setVivienda(this);
     }
+
+    public void addFoto(FotoVivienda foto) {
+        if (fotos == null) {
+            fotos = new ArrayList<>();
+        }
+        fotos.add(foto);
+        foto.setVivienda(this);
+    }
+
+    public void removeFoto(FotoVivienda foto) {
+        if (fotos != null) {
+            fotos.remove(foto);
+            foto.setVivienda(null);
+        }
+    }
+
+    public void clearFotos() {
+        if (fotos != null) {
+            Iterator<FotoVivienda> iterator = fotos.iterator();
+            while (iterator.hasNext()) {
+                FotoVivienda foto = iterator.next();
+                foto.setVivienda(null);
+                iterator.remove();
+            }
+        }
+    }
+
 }

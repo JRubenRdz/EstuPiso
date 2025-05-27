@@ -51,6 +51,8 @@ export class ViviendaListComponent implements OnInit {
 
   loadViviendas(): void {
     this.isLoading = true;
+    this.error = '';
+    
     this.viviendaService.getViviendasByAnunciante().subscribe({
       next: (viviendas) => {
         this.viviendas = viviendas;
@@ -65,7 +67,7 @@ export class ViviendaListComponent implements OnInit {
   }
 
   crearNuevaVivienda(): void {
-    this.router.navigate(['/crear-vivienda']);
+    this.router.navigate(['/nuevo-anuncio']);
   }
 
   editarVivienda(id: number): void {
@@ -73,7 +75,7 @@ export class ViviendaListComponent implements OnInit {
   }
 
   verDetalles(id: number): void {
-    this.router.navigate(['/vivienda', id]);
+    this.router.navigate(['/anuncio', id]);
   }
 
   eliminarVivienda(vivienda: any): void {

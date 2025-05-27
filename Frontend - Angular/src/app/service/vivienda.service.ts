@@ -16,8 +16,8 @@ export class ViviendaService {
     return this.http.post<void>(`${this.urlApi}`, vivienda);
   }
 
-  actualizarVivienda(vivienda: any): Observable<void> {
-    return this.http.put<void>(`${this.urlApi}`, vivienda);
+  actualizarVivienda(vivienda: any): Observable<any> { 
+    return this.http.put<any>(`${this.urlApi}`, vivienda);
   }
 
   getAllViviendas(): Observable<any[]> {
@@ -25,13 +25,12 @@ export class ViviendaService {
   }
 
   getViviendasByAnunciante(): Observable<any[]> {
-    return this.http.get<any[]>(`${this.urlApi}/all`);
+    return this.http.get<any[]>(`${this.urlApi}/all/user-login`);
   }
 
   getViviendaById(id: number): Observable<any> {
     return this.http.get<any>(`${this.urlApi}/${id}`);
   }
-
 
   buscarViviendas(
     comunidad?: string,
@@ -57,12 +56,11 @@ export class ViviendaService {
     return this.http.get<any>(`${this.urlApi}/buscar`, { params });
   }
 
-  añadirResidente(idVivienda: number, idEstudiante: number): Observable<void> {
-    return this.http.get<void>(`${this.urlApi}/${idVivienda}/residente/${idEstudiante}`);
+  añadirResidente(idVivienda: number, idEstudiante: number): Observable<any> {
+    return this.http.post<any>(`${this.urlApi}/${idVivienda}/residente/${idEstudiante}`, {});
   }
 
   deleteVivienda(id: number): Observable<void> {
     return this.http.delete<void>(`${this.urlApi}/${id}`);
   }
-
 }

@@ -1,0 +1,337 @@
+<div class="container-fluid py-4">
+  <!-- Loading State -->
+  <div *ngIf="isLoading" class="text-center py-5">
+    <div class="spinner-border text-primary" style="width: 3rem; height: 3rem;" role="status">
+      <span class="visually-hidden">Cargando...</span>
+    </div>
+    <p class="mt-3 text-muted">Cargando detalles de la vivienda...</p>
+  </div>
+
+  <!-- Error State -->
+  <div *ngIf="error && !isLoading" class="container">
+    <div class="row justify-content-center">
+      <div class="col-md-6">
+        <div class="alert alert-danger text-center" role="alert">
+          <i class="bi bi-exclamation-triangle display-4 text-danger mb-3"></i>
+          <h4>{{ error }}</h4>
+          <button class="btn btn-outline-danger mt-3" (click)="volver()">
+            <i class="bi bi-arrow-left me-2"></i>Volver
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Vivienda Details -->
+  <div *ngIf="vivienda && !isLoading && !error" class="container">
+    <!-- Header con botones de acción -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <div class="d-flex justify-content-between align-items-start">
+          <button class="btn btn-outline-secondary" (click)="volver()">
+            <i class="bi bi-arrow-left me-2"></i>Volver
+          </button>
+          
+          <div class="d-flex gap-2" *ngIf="usuarioActual">
+            <button 
+              *ngIf="puedeEditar" 
+              class="btn btn-outline-primary"
+              (click)="editarVivienda()">
+              <i class="bi bi-pencil me-2"></i>Editar
+            </button>
+            
+            <button 
+              *ngIf="esEstudiante && !yaEsResidente && getEstadoVivienda() !== 'Completa'" 
+              class="btn btn-primary"
+              (click)="aplicarVivienda()">
+              <i class="bi bi-heart me-2"></i>Aplicar
+            </button>
+            
+            <span 
+              *ngIf="yaEsResidente" 
+              class="badge bg-success fs-6 px-3 py-2">
+              <i class="bi bi-check-circle me-2"></i>Ya eres residente
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Título y estado -->
+    <div class="row mb-4">
+      <div class="col-12">
+        <h1 class="h2 mb-3 text-primary">{{ vivienda.nombre }}</h1>
+        <div class="d-flex align-items-center gap-2 mb-2">
+          <span [class]="'badge fs-6 px-3 py-2 ' + getEstadoClass() + ' bg-light border'">
+            {{ getEstadoVivienda() }}
+          </span>
+          <span class="badge bg-primary fs-6 px-3 py-2">
+            {{ vivienda.tipoVivienda }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <div class="row g-4">
+      <!-- Columna de imágenes (Carrusel) -->
+      <div class="col-lg-8">
+        <div class="card border-0 shadow-lg image-card mb-4">
+          <div class="card-body p-0">
+            <!-- Carrusel de Bootstrap -->
+            <div 
+              id="viviendaCarousel" 
+              class="carousel slide carousel-fade" 
+              data-bs-ride="carousel">
+              
+              <!-- Indicadores -->
+              <div class="carousel-indicators" *ngIf="vivienda.fotos && vivienda.fotos.length > 1">
+                <button 
+                  *ngFor="let foto of vivienda.fotos; let i = index"
+                  type="button" 
+                  data-bs-target="#viviendaCarousel" 
+                  [attr.data-bs-slide-to]="i" 
+                  [class.active]="i === 0"
+                  [attr.aria-label]="'Slide ' + (i + 1)">
+                </button>
+              </div>
+              
+              <!-- Slides -->
+              <div class="carousel-inner">
+                <div 
+                  *ngFor="let foto of vivienda.fotos; let i = index" 
+                  class="carousel-item"
+                  [class.active]="i === 0">
+                  <img 
+                    [src]="foto.imagen" 
+                    [alt]="'Foto ' + (i + 1) + ' de ' + vivienda.nombre"
+                    class="d-block w-100 carousel-image"
+                    (error)="onImageError($event)">
+                  <div class="carousel-caption d-none d-md-block">
+                    <span class="badge bg-dark bg-opacity-75">
+                      {{ i + 1 }} / {{ vivienda.fotos.length }}
+                    </span>
+                  </div>
+                </div>
+                
+                <!-- Placeholder si no hay fotos -->
+                <div 
+                  *ngIf="!vivienda.fotos || vivienda.fotos.length === 0" 
+                  class="carousel-item active">
+                  <img 
+                    src="/assets/placeholder-house.jpg" 
+                    alt="Sin imagen disponible"
+                    class="d-block w-100 carousel-image">
+                </div>
+              </div>
+              
+              <!-- Controles -->
+              <button 
+                *ngIf="vivienda.fotos && vivienda.fotos.length > 1"
+                class="carousel-control-prev" 
+                type="button" 
+                data-bs-target="#viviendaCarousel" 
+                data-bs-slide="prev">
+                <span class="carousel-control-prev-icon"></span>
+                <span class="visually-hidden">Anterior</span>
+              </button>
+              
+              <button 
+                *ngIf="vivienda.fotos && vivienda.fotos.length > 1"
+                class="carousel-control-next" 
+                type="button" 
+                data-bs-target="#viviendaCarousel" 
+                data-bs-slide="next">
+                <span class="carousel-control-next-icon"></span>
+                <span class="visually-hidden">Siguiente</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Descripción (MOVIDA AQUÍ) -->
+        <div class="card border-0 shadow-lg description-card">
+          <div class="card-body p-4">
+            <h4 class="text-primary mb-3">
+              <i class="bi bi-card-text me-2"></i>Descripción
+            </h4>
+            <p class="lead text-muted lh-lg">
+              {{ vivienda.descripcion }}
+            </p>
+          </div>
+        </div>
+
+        <!-- NUEVO: Mapa de ubicación -->
+        <div class="card border-0 shadow-lg map-card mt-4">
+          <div class="card-body p-4">
+            <h4 class="text-primary mb-3">
+              <i class="bi bi-map me-2"></i>Ubicación
+            </h4>
+            <app-map
+              [direccion]="vivienda.calle"
+              [numero]="vivienda.numero"
+              [municipio]="vivienda.municipio"
+              [provincia]="vivienda.provincia"
+              [nombreVivienda]="vivienda.nombre">
+            </app-map>
+            <div class="mt-3 text-center">
+              <small class="text-muted">
+                <i class="bi bi-info-circle me-1"></i>
+                La ubicación mostrada puede ser aproximada
+              </small>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Columna de información -->
+      <div class="col-lg-4">
+        <!-- Precio y datos básicos -->
+        <div class="card border-0 shadow-lg info-card mb-4">
+          <div class="card-body p-4">
+            <!-- Precio -->
+            <div class="price-section mb-4">
+              <div class="d-flex align-items-center">
+                <i class="bi bi-currency-euro text-success fs-3 me-2"></i>
+                <div>
+                  <span class="h2 text-success mb-0">{{ vivienda.precioMensual }}</span>
+                  <span class="text-muted"> €/mes</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Información básica -->
+            <div class="row g-3 mb-4">
+              <div class="col-6">
+                <div class="info-item text-center">
+                  <i class="bi bi-door-open text-primary fs-3"></i>
+                  <div class="mt-2">
+                    <div class="h5 mb-1">{{ vivienda.numeroHabitaciones }}</div>
+                    <small class="text-muted">Habitaciones</small>
+                  </div>
+                </div>
+              </div>
+              <div class="col-6">
+                <div class="info-item text-center">
+                  <i class="bi bi-people text-success fs-3"></i>
+                  <div class="mt-2">
+                    <div class="h5 mb-1">{{ vivienda.residentes?.length || 0 }}/{{ vivienda.numeroHabitaciones }}</div>
+                    <small class="text-muted">Ocupación</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ubicación -->
+            <div class="location-section">
+              <h5 class="text-primary mb-3">
+                <i class="bi bi-geo-alt me-2"></i>Ubicación
+              </h5>
+              <div class="mb-2">
+                <strong>{{ vivienda.calle }}, {{ vivienda.numero }}</strong>
+              </div>
+              <div class="text-muted">
+                {{ vivienda.municipio }}, {{ vivienda.provincia }}
+              </div>
+              <div class="text-muted">
+                {{ vivienda.comunidad }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Anunciante (MEJORADO CON TELÉFONO Y EMAIL) -->
+        <div class="card border-0 shadow-lg owner-card mb-4">
+          <div class="card-body p-4">
+            <h5 class="text-primary mb-3">
+              <i class="bi bi-person me-2"></i>Información de Contacto
+            </h5>
+            <div class="d-flex align-items-start">
+              <div class="avatar-placeholder me-3">
+                <i class="bi bi-person-circle fs-2 text-muted"></i>
+              </div>
+              <div class="flex-grow-1">
+                <div class="fw-semibold mb-2">{{ vivienda.anunciante?.nombre || 'Anunciante' }}</div>
+                
+                <!-- Email con enlace -->
+                <div class="contact-info mb-2">
+                  <i class="bi bi-envelope text-primary me-2"></i>
+                  <a [href]="'mailto:' + vivienda.anuncianteEmail" 
+                     class="text-decoration-none">
+                    {{ vivienda.anuncianteEmail || 'No disponible' }}
+                  </a>
+                </div>
+                
+                <!-- Teléfono con enlace -->
+                <div class="contact-info mb-2" *ngIf="vivienda.anuncianteTelefono">
+                  <i class="bi bi-telephone text-success me-2"></i>
+                  <a [href]="'tel:' + vivienda.anuncianteTelefono" 
+                     class="text-decoration-none">
+                    {{ vivienda.anuncianteTelefono }}
+                  </a>
+                </div>
+                
+                <!-- Botones de contacto -->
+                <div class="d-flex gap-2 mt-3">
+                  <a 
+                    [href]="'mailto:' + vivienda.anuncianteEmail" 
+                    class="btn btn-outline-primary btn-sm">
+                    <i class="bi bi-envelope me-1"></i>Email
+                  </a>
+                  <a 
+                    *ngIf="vivienda.anunciante?.telefono"
+                    [href]="'tel:' + vivienda.anunciante?.telefono" 
+                    class="btn btn-outline-success btn-sm">
+                    <i class="bi bi-telephone me-1"></i>Llamar
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Fechas -->
+        <div class="card border-0 shadow-lg dates-card">
+          <div class="card-body p-4">
+            <h6 class="text-muted mb-3">Información de Publicación</h6>
+            <div class="row g-2 text-center">
+              <div class="col-6">
+                <small class="text-muted d-block">Publicado</small>
+                <strong>{{ formatearFecha(vivienda.fechaPublicacion) }}</strong>
+              </div>
+              <div class="col-6">
+                <small class="text-muted d-block">Actualizado</small>
+                <strong>{{ formatearFecha(vivienda.ultimaEdicion) }}</strong>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Residentes actuales -->
+    <div class="row mt-4" *ngIf="vivienda.residentes && vivienda.residentes.length > 0">
+      <div class="col-12">
+        <div class="card border-0 shadow-lg residents-card">
+          <div class="card-body p-4">
+            <h4 class="text-primary mb-3">
+              <i class="bi bi-people me-2"></i>Residentes Actuales
+            </h4>
+            <div class="row g-3">
+              <div 
+                class="col-md-6 col-lg-4" 
+                *ngFor="let residente of vivienda.residentes">
+                <div class="card bg-light border-0">
+                  <div class="card-body text-center p-3">
+                    <i class="bi bi-person-circle fs-2 text-primary mb-2"></i>
+                    <h6 class="mb-1">{{ residente.nombre }}</h6>
+                    <small class="text-muted">{{ residente.email }}</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

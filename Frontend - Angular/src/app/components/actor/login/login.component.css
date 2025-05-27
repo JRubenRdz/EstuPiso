@@ -1,0 +1,195 @@
+/* Container principal */
+.container {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 100vh;
+  width: 100%;
+  max-width: none !important; /* <-- Anular el max-width de Bootstrap */
+  margin: 0;
+  padding: 2rem 1rem; /* <-- Añadir padding para espaciado */
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative; /* <-- Cambiar de fixed a relative */
+}
+
+.container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.1);
+  z-index: 1;
+}
+
+/* Card principal */
+.card {
+  position: relative;
+  z-index: 2;
+  border: none;
+  border-radius: 20px;
+  backdrop-filter: blur(10px);
+  background: rgba(255, 255, 255, 0.95);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  animation: slideInUp 0.6s ease-out;
+  max-width: 400px;
+  width: 100%;
+}
+
+/* Icono y título */
+.bi-person-circle {
+  color: #667eea;
+  animation: pulse 2s infinite;
+}
+
+h3 {
+  color: #333;
+  font-weight: 600;
+  margin-bottom: 0;
+}
+
+/* Inputs */
+.form-control {
+  border: 2px solid #e9ecef;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.form-control:focus {
+  border-color: #667eea;
+  box-shadow: 0 0 0 0.2rem rgba(102, 126, 234, 0.25);
+  background: white;
+  transform: translateY(-2px);
+}
+
+.form-control::placeholder {
+  color: #adb5bd;
+  font-weight: 400;
+}
+
+/* Estados de validación */
+.form-control.is-invalid {
+  border-color: #dc3545;
+  background: rgba(220, 53, 69, 0.05);
+}
+
+.form-control.is-valid {
+  border-color: #28a745;
+  background: rgba(40, 167, 69, 0.05);
+}
+
+.invalid-feedback {
+  font-size: 0.875rem;
+  color: #dc3545;
+  font-weight: 500;
+}
+
+/* Botón principal */
+.btn-primary {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 12px;
+  padding: 0.75rem 1.5rem;
+  font-weight: 600;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.btn-primary:hover:not(:disabled) {
+  transform: translateY(-3px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+  background: linear-gradient(135deg, #5a6fd8 0%, #6a42a0 100%);
+}
+
+.btn-primary:disabled {
+  background: #6c757d;
+  box-shadow: none;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+/* Enlaces */
+a {
+  color: #667eea;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.3s ease;
+}
+
+a:hover {
+  color: #5a6fd8;
+  text-decoration: underline;
+}
+
+/* Texto */
+span {
+  color: #6c757d;
+  font-weight: 400;
+}
+
+/* Animaciones */
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(50px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+/* Responsive */
+@media (max-width: 576px) {
+  .container {
+    padding: 1rem;
+    min-height: calc(100vh - 60px); /* <-- Ajustar para la altura del navbar */
+  }
+  
+  .card {
+    padding: 2rem 1.5rem !important;
+  }
+  
+  .bi-person-circle {
+    font-size: 3rem !important;
+  }
+  
+  h3 {
+    font-size: 1.5rem;
+  }
+}
+
+/* Efectos de entrada para elementos del formulario */
+.form-control, .btn {
+  animation: fadeInUp 0.5s ease-out;
+  animation-fill-mode: both;
+}
+
+.form-control:nth-child(1) { animation-delay: 0.1s; }
+.form-control:nth-child(2) { animation-delay: 0.2s; }
+.btn { animation-delay: 0.3s; }
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

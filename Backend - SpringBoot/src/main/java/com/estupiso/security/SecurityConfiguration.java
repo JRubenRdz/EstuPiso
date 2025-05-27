@@ -65,12 +65,13 @@ public class SecurityConfiguration {
                 .requestMatchers(HttpMethod.GET, "/estudiante/all").hasAuthority("ADMIN")
                 .requestMatchers(HttpMethod.GET, "/estudiante/{id}").hasAuthority("ESTUDIANTE")
                 .requestMatchers(HttpMethod.DELETE, "/estudiante").hasAuthority("ESTUDIANTE")
+                .requestMatchers(HttpMethod.GET, "/estudiante/user/{usuario}").hasAuthority("ANUNCIANTE")
 
 
                 // VIVIENDA
                 .requestMatchers(HttpMethod.POST, "/vivienda").hasAuthority("ANUNCIANTE")
                 .requestMatchers(HttpMethod.PUT, "/vivienda").hasAuthority("ANUNCIANTE")
-                .requestMatchers(HttpMethod.GET, "/vivienda/all").hasAuthority("ANUNCIANTE")
+                .requestMatchers(HttpMethod.GET, "/vivienda/all").permitAll()
                 .requestMatchers(HttpMethod.GET, "/vivienda/anunciante/{id}").permitAll()
                 .requestMatchers(HttpMethod.GET, "/vivienda/{id}").permitAll()
                 .requestMatchers(HttpMethod.GET, "/vivienda/buscar").permitAll()

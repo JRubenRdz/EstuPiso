@@ -29,10 +29,10 @@ public class ViviendaController {
             @ApiResponse(responseCode = "201", description = "Vivienda creada exitosamente"),
             @ApiResponse(responseCode = "400", description = "Solicitud no válida")
     })
-    public ResponseEntity<Vivienda> createVivienda(@RequestBody Vivienda vivienda) {
+    public ResponseEntity<?> createVivienda(@RequestBody Vivienda vivienda) {
         Vivienda nuevaVivienda = viviendaService.createVivienda(vivienda);
         if (nuevaVivienda != null) {
-            return ResponseEntity.status(HttpStatus.CREATED).body(nuevaVivienda);
+            return ResponseEntity.status(HttpStatus.CREATED).body("Vivienda creada exitosamente");
         } else {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).build();
         }
@@ -59,7 +59,7 @@ public class ViviendaController {
         return ResponseEntity.ok(viviendaService.findAllViviendas());
     }
 
-    @PostMapping("/anunciante/{id}")
+    @GetMapping("/anunciante/{id}")
     @Operation(summary = "Obtener viviendas por anunciante")
     public ResponseEntity<?> findByAnunciante(@PathVariable int id) {
         return ResponseEntity.ok(viviendaService.findByAnunciante(id));
@@ -116,9 +116,9 @@ public class ViviendaController {
     })
     public ResponseEntity<Void> deleteVivienda(@PathVariable int id) {
         if (viviendaService.deleteVivienda(id)) {
-            return ResponseEntity.ok().build();
+            return ResponseEntity.status(HttpStatus.OK).build();
         } else {
-            return ResponseEntity.notFound().build();
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
     }
 }

@@ -1,5 +1,5 @@
 import { Component, OnInit } from '@angular/core';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
+import { FormBuilder, FormGroup, Validators, ReactiveFormsModule, FormArray } from '@angular/forms';
 import { Router, ActivatedRoute } from '@angular/router';
 import { CommonModule } from '@angular/common';
 import { TiposVivienda, Vivienda } from '../../../model/Vivienda';
@@ -50,6 +50,29 @@ export class ViviendaFormComponent implements OnInit {
   ) {}
 
   ngOnInit(): void {
+    // Verificar que el usuario sea anunciante
+    const token = localStorage.getItem('token');
+    if (!token) {
+      this.router.navigate(['/']);
+      return;
+    }
+
+    try {
+      const decoded: any = jwtDecode(token);
+      const rol = decoded.rol;
+      
+      // Solo los anunciantes pueden crear/editar viviendas
+      if (rol !== 'ANUNCIANTE') {
+        this.router.navigate(['/']);
+        return;
+      }
+    } catch (error) {
+      console.error('Error al decodificar token:', error);
+      this.router.navigate(['/']);
+      return;
+    }
+
+    // Si llegamos aquí, el usuario es anunciante - continuar con la lógica normal
     this.initializeForm();
     this.loadComunidades();
     this.checkEditMode();
@@ -58,6 +81,7 @@ export class ViviendaFormComponent implements OnInit {
 
   initializeForm(): void {
     this.viviendaForm = this.fb.group({
+      nombre: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
       comunidad: ['', [Validators.required]],
       provincia: ['', [Validators.required]],
       municipio: ['', [Validators.required]],
@@ -66,20 +90,57 @@ export class ViviendaFormComponent implements OnInit {
       descripcion: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(1000)]],
       precioMensual: ['', [Validators.required, Validators.min(1), Validators.max(9999)]],
       tipoVivienda: ['', [Validators.required]],
-      numeroHabitaciones: ['', [Validators.required, Validators.min(1), Validators.max(20)]]
+      numeroHabitaciones: ['', [Validators.required, Validators.min(1), Validators.max(20)]],
+      fotos: this.fb.array([this.createFotoControl()]) // <-- Nuevo FormArray
     });
   }
 
-  setupFormSubscriptions(): void {
-    // Suscripción para cambios en comunidad
-    this.viviendaForm.get('comunidad')?.valueChanges.subscribe(comunidadNombre => {
-      this.onComunidadChange(comunidadNombre);
-    });
+  // Crear un control para una foto individual
+  createFotoControl() {
+    return this.fb.control('', [Validators.required, Validators.pattern(/^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)$/i)]);
+  }
 
-    // Suscripción para cambios en provincia
-    this.viviendaForm.get('provincia')?.valueChanges.subscribe(provinciaNombre => {
-      this.onProvinciaChange(provinciaNombre);
-    });
+  // Getter para el FormArray de fotos
+  get fotosArray(): FormArray {
+    return this.viviendaForm.get('fotos') as FormArray;
+  }
+
+  // Añadir una nueva foto
+  addFoto(): void {
+    if (this.fotosArray.length < 10) { // Límite de 10 fotos
+      this.fotosArray.push(this.createFotoControl());
+    }
+  }
+
+  // Remover la última foto
+  removeFoto(): void {
+    if (this.fotosArray.length > 1) { // Mínimo 1 foto
+      this.fotosArray.removeAt(this.fotosArray.length - 1);
+    }
+  }
+
+  // Remover una foto específica por índice
+  removeFotoAt(index: number): void {
+    if (this.fotosArray.length > 1) {
+      this.fotosArray.removeAt(index);
+    }
+  }
+
+  // Verificar si una foto específica es inválida
+  isFotoInvalid(index: number): boolean {
+    const foto = this.fotosArray.at(index);
+    return !!(foto && foto.invalid && foto.touched);
+  }
+
+  // Obtener error de una foto específica
+  getFotoError(index: number): string {
+    const foto = this.fotosArray.at(index);
+    if (!foto || !foto.errors) return '';
+
+    const errors = foto.errors;
+    if (errors['required']) return 'La URL de la foto es obligatoria';
+    if (errors['pattern']) return 'URL no válida. Debe ser una imagen (jpg, jpeg, png, gif, webp)';
+    return 'URL no válida';
   }
 
   checkEditMode(): void {
@@ -178,7 +239,25 @@ export class ViviendaFormComponent implements OnInit {
   }
 
   populateForm(vivienda: any): void {
+    // Limpiar el array de fotos primero
+    while (this.fotosArray.length) {
+      this.fotosArray.removeAt(0);
+    }
+
+    // Añadir las fotos existentes o una vacía si no hay fotos
+    if (vivienda.fotos && vivienda.fotos.length > 0) {
+      vivienda.fotos.forEach((foto: any) => {
+        this.fotosArray.push(this.fb.control(foto.imagen, [
+          Validators.required, 
+          Validators.pattern(/^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)$/i)
+        ]));
+      });
+    } else {
+      this.fotosArray.push(this.createFotoControl());
+    }
+
     this.viviendaForm.patchValue({
+      nombre: vivienda.nombre,
       comunidad: vivienda.comunidad,
       provincia: vivienda.provincia,
       municipio: vivienda.municipio,
@@ -198,7 +277,9 @@ export class ViviendaFormComponent implements OnInit {
     }
 
     this.isSubmitting = true;
-    const formData = this.viviendaForm.value;    // Obtener el anunciante actual desde JWT
+    const formData = this.viviendaForm.value;
+    
+    // Obtener el anunciante actual desde JWT
     const token = localStorage.getItem('token');
     if (!token) {
       this.modalMessage = 'Error: Usuario no autenticado';
@@ -208,9 +289,17 @@ export class ViviendaFormComponent implements OnInit {
     }
 
     const decoded: any = jwtDecode(token);
-    const currentUserId = decoded.id;    // Preparar el payload
+    const currentUserId = decoded.id;
+    
+    // Preparar las fotos en el formato correcto para el backend
+    const fotosFormatted = formData.fotos
+      .filter((url: string) => url.trim()) // Filtrar URLs vacías
+      .map((url: string) => ({ imagen: url.trim() })); // <-- CAMBIO: 'url' por 'imagen'
+    
+    // Preparar el payload
     const viviendaPayload = {
       ...formData,
+      fotos: fotosFormatted,
       fechaPublicacion: this.isEditMode ? undefined : new Date(),
       ultimaEdicion: new Date(),
       anunciante: {
@@ -228,6 +317,7 @@ export class ViviendaFormComponent implements OnInit {
 
     request.subscribe({
       next: (response) => {
+        console.log('Respuesta exitosa:', response);
         this.modalMessage = this.isEditMode 
           ? 'Vivienda actualizada correctamente'
           : 'Vivienda creada correctamente';
@@ -235,9 +325,17 @@ export class ViviendaFormComponent implements OnInit {
         this.isSubmitting = false;
       },
       error: (error) => {
-        console.error('Error al guardar vivienda:', error);
+        console.error('Error completo:', error);
         
-        // Verificar si es un error de validación del backend
+        if (error.status === 201) {
+          this.modalMessage = this.isEditMode 
+            ? 'Vivienda actualizada correctamente'
+            : 'Vivienda creada correctamente';
+          this.showSuccessModal = true;
+          this.isSubmitting = false;
+          return;
+        }
+        
         if (error.status === 400 && error.error) {
           this.modalMessage = error.error.message || 'Error de validación en los datos';
         } else if (error.status === 409) {
@@ -257,7 +355,13 @@ export class ViviendaFormComponent implements OnInit {
   markFormGroupTouched(): void {
     Object.keys(this.viviendaForm.controls).forEach(key => {
       const control = this.viviendaForm.get(key);
-      control?.markAsTouched();
+      if (control instanceof FormArray) {
+        control.controls.forEach(arrayControl => {
+          arrayControl.markAsTouched();
+        });
+      } else {
+        control?.markAsTouched();
+      }
     });
   }
 
@@ -283,7 +387,7 @@ export class ViviendaFormComponent implements OnInit {
   }
 
   onCancel(): void {
-    this.router.navigate(['/viviendas']);
+    this.router.navigate(['/']);
   }
 
   abrirModal(tipo: 'success' | 'error'): void {
@@ -292,10 +396,9 @@ export class ViviendaFormComponent implements OnInit {
       const modal = new (window as any).bootstrap.Modal(modalElement);
       modal.show();
 
-      // Configurar evento para redirigir cuando se cierre el modal de éxito
       if (tipo === 'success') {
         modalElement.addEventListener('hidden.bs.modal', () => {
-          this.router.navigate(['/viviendas']);
+          this.router.navigate(['/mis-anuncios']);
         }, { once: true });
       }
     }
@@ -304,6 +407,7 @@ export class ViviendaFormComponent implements OnInit {
   cerrarModal(tipo: 'success' | 'error'): void {
     if (tipo === 'success') {
       this.showSuccessModal = false;
+      this.router.navigate(['/mis-anuncios']);
     } else {
       this.showErrorModal = false;
     }
@@ -318,6 +422,44 @@ export class ViviendaFormComponent implements OnInit {
     if (this.showErrorModal) {
       this.abrirModal('error');
       this.showErrorModal = false;
+    }
+  }
+
+  setupFormSubscriptions(): void {
+    // Suscripción para cambios en la comunidad
+    this.viviendaForm.get('comunidad')?.valueChanges.subscribe(comunidadNombre => {
+      if (comunidadNombre) {
+        this.onComunidadChange(comunidadNombre);
+      }
+    });
+
+    // Suscripción para cambios en la provincia
+    this.viviendaForm.get('provincia')?.valueChanges.subscribe(provinciaNombre => {
+      if (provinciaNombre) {
+        this.onProvinciaChange(provinciaNombre);
+      }
+    });
+
+    // Opcional: Suscripción para validar URLs de fotos en tiempo real
+    this.fotosArray.valueChanges.subscribe(fotos => {
+      // Aquí puedes añadir lógica adicional si necesitas validar
+      // las URLs de fotos en tiempo real
+    });
+  }
+
+  // Método para manejar error de carga de imagen
+  onImageError(event: Event): void {
+    const target = event.target as HTMLImageElement;
+    if (target) {
+      target.style.display = 'none';
+    }
+  }
+
+  // Método para manejar carga exitosa de imagen
+  onImageLoad(event: Event): void {
+    const target = event.target as HTMLImageElement;
+    if (target) {
+      target.style.display = 'block';
     }
   }
 }

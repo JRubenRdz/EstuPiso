@@ -103,28 +103,24 @@ public class JWTUtils {
         return token;
     }
 
-    public <T> T userLogin() {
+    public <T extends Actor> T userLogin() {
         String usuario = SecurityContextHolder.getContext().getAuthentication().getName();
         if (StringUtils.isEmpty(usuario)) {
             return null;
         }
 
         Optional<Actor> actorO = actorService.findByUsuario(usuario);
-        if (!actorO.isPresent()) {
+        if (actorO.isEmpty()) {
             return null;
         }
 
         Actor actor = actorO.get();
-        switch (actor.getRol()) {
-            case ESTUDIANTE:
-                return (T) estudianteService.findByUsuario(usuario).orElse(null);
-            case ADMIN:
-                return (T) adminService.findByUsuario(usuario).orElse(null);
-            case ANUNCIANTE:
-                return (T) anuncianteService.findByUsuario(usuario).orElse(null);
-            default:
-                return null;
-        }
+        return switch (actor.getRol()) {
+            case ESTUDIANTE -> (T) estudianteService.findByUsuario(usuario).orElse(null);
+            case ADMIN -> (T) adminService.findByUsuario(usuario).orElse(null);
+            case ANUNCIANTE -> (T) anuncianteService.findByUsuario(usuario).orElse(null);
+            default -> null;
+        };
     }
 
 }

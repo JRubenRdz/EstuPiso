@@ -2,11 +2,11 @@ import { Vivienda } from "./Vivienda";
 
 export class FotoVivienda {
     id!: number;
-    url: string;
+    imagen: string;
     vivienda: Vivienda;
 
-    constructor(url: string, vivienda: Vivienda) {
-        this.url = url;
+    constructor(imagen: string, vivienda: Vivienda) {
+        this.imagen = imagen;
         this.vivienda = vivienda;
     }
 }

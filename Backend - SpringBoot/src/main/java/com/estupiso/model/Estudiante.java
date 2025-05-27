@@ -1,5 +1,6 @@
 package com.estupiso.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
@@ -18,6 +19,7 @@ public class Estudiante extends Actor {
 
     @ManyToOne(optional = true, fetch = FetchType.LAZY)
     @JoinColumn(name = "vivienda_id", nullable = true)
+    @JsonBackReference
     private Vivienda vivienda;
 
 }

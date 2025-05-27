@@ -70,7 +70,7 @@ public class SecurityConfiguration {
                 // VIVIENDA
                 .requestMatchers(HttpMethod.POST, "/vivienda").hasAuthority("ANUNCIANTE")
                 .requestMatchers(HttpMethod.PUT, "/vivienda").hasAuthority("ANUNCIANTE")
-                .requestMatchers(HttpMethod.GET, "/vivienda/all").hasAnyAuthority("ADMIN", "ANUNCIANTE", "ESTUDIANTE")
+                .requestMatchers(HttpMethod.GET, "/vivienda/all").hasAuthority("ANUNCIANTE")
                 .requestMatchers(HttpMethod.GET, "/vivienda/anunciante/{id}").permitAll()
                 .requestMatchers(HttpMethod.GET, "/vivienda/{id}").permitAll()
                 .requestMatchers(HttpMethod.GET, "/vivienda/buscar").permitAll()

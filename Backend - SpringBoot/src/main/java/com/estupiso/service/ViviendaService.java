@@ -2,6 +2,7 @@ package com.estupiso.service;
 
 import com.estupiso.model.Anunciante;
 import com.estupiso.model.Estudiante;
+import com.estupiso.model.FotoVivienda;
 import com.estupiso.model.Vivienda;
 import com.estupiso.repository.EstudianteRepository;
 import com.estupiso.repository.ViviendaRepository;
@@ -18,6 +19,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.ArrayList;
 
 @Service
 public class ViviendaService {
@@ -34,6 +36,9 @@ public class ViviendaService {
     @Autowired
     private EstudianteRepository estudianteRepository;
 
+    @Autowired
+    private FotoViviendaService fotoViviendaService;
+
     public List<Vivienda> findByAnunciante(int id) {
         Optional<Anunciante> anunciante = anuncianteService.findById(id);
         if (anunciante.isPresent()) {
@@ -43,7 +48,12 @@ public class ViviendaService {
     }
 
     public List<Vivienda> findAllViviendas() {
-        return viviendaRepository.findAll();
+        Anunciante userLogin = jwtUtils.userLogin();
+        if (userLogin != null) {
+           Optional<List<Vivienda>> viviendasO = viviendaRepository.findAllByAnunciante(userLogin);
+            return viviendasO.orElse(null);
+        }
+        return null;
     }
 
     public Optional<Vivienda> findById(int id) {
@@ -75,9 +85,47 @@ public class ViviendaService {
     public Vivienda createVivienda(Vivienda vivienda) {
         Anunciante anuncianteLogin = jwtUtils.userLogin();
         if (anuncianteLogin != null) {
+            // Primero establecemos la fecha de publicación y el anunciante
             vivienda.setFechaPublicacion(LocalDateTime.now());
             vivienda.setAnunciante(anuncianteLogin);
-            return viviendaRepository.save(vivienda);
+            
+            // Almacenar las fotos en una lista separada y limpiar la lista original
+            List<FotoVivienda> fotosOriginales = null;
+            if (vivienda.getFotos() != null && !vivienda.getFotos().isEmpty()) {
+                fotosOriginales = List.copyOf(vivienda.getFotos());
+                vivienda.getFotos().clear();
+            }
+            
+            // Guardamos primero la vivienda sin las fotos
+            Vivienda viviendaGuardada = viviendaRepository.save(vivienda);
+            
+            // Después añadimos y guardamos las fotos una por una
+            if (fotosOriginales != null) {
+                for (FotoVivienda foto : fotosOriginales) {
+                    // Verificar que la foto tiene una URL válida
+                    if (foto.getImagen() == null || foto.getImagen().isEmpty()) {
+                        System.out.println("Advertencia: Saltando foto sin URL válida");
+                        continue; // Saltar fotos sin URL
+                    }
+                    
+                    // Establecer explícitamente la relación
+                    foto.setVivienda(viviendaGuardada);
+                    
+                    // Guardar la foto
+                    FotoVivienda fotoGuardada = fotoViviendaService.saveFotoVivienda(foto);
+                    
+                    // Añadir la foto guardada a la colección de la vivienda
+                    if (viviendaGuardada.getFotos() == null) {
+                        viviendaGuardada.setFotos(new java.util.ArrayList<>());
+                    }
+                    viviendaGuardada.getFotos().add(fotoGuardada);
+                }
+                
+                // Actualizar la vivienda con las fotos añadidas
+                viviendaGuardada = viviendaRepository.save(viviendaGuardada);
+            }
+            
+            return viviendaGuardada;
         }
         return null;
     }
@@ -126,9 +174,17 @@ public class ViviendaService {
         Optional<Vivienda> viviendaO = viviendaRepository.findById(idVivienda);
         if (viviendaO.isPresent()) {
             Anunciante anuncianteLogin = jwtUtils.userLogin();
-            if (anuncianteLogin != null && anuncianteLogin.getViviendas().contains(viviendaO.get())) {
-                viviendaRepository.deleteById(idVivienda);
-                return true;
+            if (anuncianteLogin != null) {
+                // Verificación directa por ID en lugar de usar contains()
+                if (viviendaO.get().getAnunciante().getId() == anuncianteLogin.getId()) {
+                    // Eliminar explícitamente las fotos primero
+                    for (FotoVivienda foto : new ArrayList<>(viviendaO.get().getFotos())) {
+                        fotoViviendaService.deleteFotoVivienda(foto.getId());
+                    }
+                    // Luego eliminar la vivienda
+                    viviendaRepository.delete(viviendaO.get());
+                    return true;
+                }
             }
         }
         return false;

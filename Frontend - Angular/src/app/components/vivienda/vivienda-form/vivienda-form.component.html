@@ -145,6 +145,27 @@
                 Información Básica
               </h5>
               
+              <div class="row g-3 mb-3">
+                <div class="col-12">
+                  <label for="nombre" class="form-label">
+                    Nombre de la vivienda <span class="text-danger">*</span>
+                  </label>
+                  <input 
+                    type="text"
+                    id="nombre"
+                    class="form-control animate-input"
+                    formControlName="nombre"
+                    placeholder="Ej: Apartamento céntrico cerca de la universidad"
+                    [class.is-invalid]="isFieldInvalid('nombre')">
+                  <div class="form-text">
+                    Un nombre descriptivo y atractivo para tu vivienda
+                  </div>
+                  <div class="invalid-feedback" *ngIf="isFieldInvalid('nombre')">
+                    {{ getFieldError('nombre') }}
+                  </div>
+                </div>
+              </div>
+              
               <div class="row g-3">
                 <div class="col-md-6">
                   <label for="tipoVivienda" class="form-label">
@@ -230,6 +251,70 @@
                 <div class="invalid-feedback" *ngIf="isFieldInvalid('descripcion')">
                   {{ getFieldError('descripcion') }}
                 </div>
+              </div>
+            </div>
+
+            <!-- Sección de Fotos (NUEVA) -->
+            <div class="form-section mb-4">
+              <h5 class="section-title text-primary mb-3">
+                <i class="bi bi-camera-fill me-2"></i>
+                Fotos de la vivienda
+              </h5>
+              
+              <div class="fotos-container" formArrayName="fotos">
+                <div *ngFor="let foto of fotosArray.controls; let i = index" 
+                     class="foto-input-group mb-3 animate-input-group">
+                  <label class="form-label">
+                    Foto {{ i + 1 }} <span class="text-danger">*</span>
+                  </label>
+                  <div class="input-group">
+                    <span class="input-group-text">
+                      <i class="bi bi-link-45deg"></i>
+                    </span>
+                    <input 
+                      type="url"
+                      class="form-control animate-input"
+                      [formControlName]="i"
+                      placeholder="https://ejemplo.com/imagen.jpg"
+                      [class.is-invalid]="isFotoInvalid(i)">
+                    <button 
+                      *ngIf="fotosArray.length > 1"
+                      type="button" 
+                      class="btn btn-outline-danger"
+                      (click)="removeFotoAt(i)"
+                      [disabled]="isSubmitting">
+                      <i class="bi bi-trash3"></i>
+                    </button>
+                  </div>
+                  <div class="invalid-feedback" *ngIf="isFotoInvalid(i)">
+                    {{ getFotoError(i) }}
+                  </div>
+                  
+                  <!-- Preview de la imagen -->
+                  <div *ngIf="foto.value && foto.valid" class="mt-2">
+                    <img 
+                      [src]="foto.value" 
+                      alt="Preview foto {{ i + 1 }}"
+                      class="img-preview">
+                  </div>
+                </div>
+              </div>
+
+              <!-- Botones para gestionar fotos -->
+              <div class="fotos-actions d-flex gap-2 justify-content-start mt-3">
+                <button 
+                  type="button" 
+                  class="btn btn-outline-primary btn-sm"
+                  (click)="addFoto()"
+                  [disabled]="fotosArray.length >= 10 || isSubmitting">
+                  <i class="bi bi-plus-circle me-1"></i>
+                  Añadir foto
+                </button>
+              </div>
+              
+              <div class="form-text mt-2">
+                <i class="bi bi-info-circle me-1"></i>
+                Añade URLs de imágenes (JPG, PNG, GIF, WebP). Máximo 10 fotos.
               </div>
             </div>
 

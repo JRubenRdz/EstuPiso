@@ -1,5 +1,6 @@
 package com.estupiso.model;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Pattern;
@@ -23,6 +24,7 @@ public class Anunciante extends Actor {
     private String telefono;
 
     @OneToMany(mappedBy = "anunciante", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<Vivienda> viviendas = new ArrayList<>();
 
 }

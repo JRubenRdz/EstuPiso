@@ -14,6 +14,7 @@ export enum TiposVivienda {
 
 export class Vivienda {
     id!: number;
+    nombre: string;
     comunidad: string;
     provincia: string;
     municipio: string;
@@ -29,7 +30,8 @@ export class Vivienda {
     residentes: Estudiante[];
     fotos: FotoVivienda[];
     
-    constructor(comunidad: string, provincia: string, municipio: string, calle: string, numero: string, descripcion: string, precioMensual: number, tipoVivienda: TiposVivienda, numeroHabitaciones: number, fechaPublicacion: Date, ultimaEdicion: Date, anunciante: Anunciante, residentes: Estudiante[], fotos: FotoVivienda[]) {
+    constructor(nombre: string, comunidad: string, provincia: string, municipio: string, calle: string, numero: string, descripcion: string, precioMensual: number, tipoVivienda: TiposVivienda, numeroHabitaciones: number, fechaPublicacion: Date, ultimaEdicion: Date, anunciante: Anunciante, residentes: Estudiante[], fotos: FotoVivienda[]) {
+        this.nombre = nombre;
         this.comunidad = comunidad;
         this.provincia = provincia;
         this.municipio = municipio;

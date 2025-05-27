@@ -24,8 +24,8 @@ export class ViviendaService {
     return this.http.get<any[]>(`${this.urlApi}/all`);
   }
 
-  getViviendasByAnuncianteId(anunciante: any): Observable<any[]> {
-    return this.http.post<any[]>(`${this.urlApi}/anunciante`, anunciante);
+  getViviendasByAnunciante(): Observable<any[]> {
+    return this.http.get<any[]>(`${this.urlApi}/all`);
   }
 
   getViviendaById(id: number): Observable<any> {

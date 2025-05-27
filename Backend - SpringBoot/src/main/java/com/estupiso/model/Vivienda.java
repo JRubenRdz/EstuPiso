@@ -1,7 +1,10 @@
 package com.estupiso.model;
 
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -40,29 +43,32 @@ public class Vivienda extends DomainEntity {
     @NotBlank
     private String descripcion;
 
-    @NotBlank
+    @NotNull
     private int precioMensual;
 
-    @NotBlank
+    @NotNull
     private TiposVivienda tipoVivienda;
 
     @NotBlank
     private String numeroHabitaciones;
 
-    @NotBlank
+    @NotNull
     private LocalDateTime fechaPublicacion;
 
-    @NotBlank
+    @NotNull
     private LocalDateTime ultimaEdicion;
 
     @ManyToOne
     @JoinColumn(name = "anunciante_id")
+    @JsonBackReference
     private Anunciante anunciante;
 
     @OneToMany(mappedBy = "vivienda", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonManagedReference
     private List<Estudiante> residentes = new ArrayList<>();
 
-    @OneToMany(mappedBy = "vivienda", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "vivienda", cascade = CascadeType.REMOVE, orphanRemoval = true)
+    @JsonManagedReference
     private List<FotoVivienda> fotos = new ArrayList<>();
 
     public void añadirResidente(Estudiante estudiante) {

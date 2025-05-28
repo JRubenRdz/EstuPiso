@@ -1,6 +1,5 @@
 package com.estupiso.dto;
 
-import com.estupiso.model.Anunciante;
 import com.estupiso.model.Estudiante;
 import com.estupiso.model.FotoVivienda;
 import com.estupiso.model.TiposVivienda;
@@ -22,7 +21,7 @@ public class ViviendaDto {
     private String descripcion;
     private int precioMensual;
     private TiposVivienda tipoVivienda;
-    private String numeroHabitaciones;
+    private int numeroHabitaciones;
     private LocalDateTime fechaPublicacion;
     private LocalDateTime ultimaEdicion;
     private int anuncianteId;

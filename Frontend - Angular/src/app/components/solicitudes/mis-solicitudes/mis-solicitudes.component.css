@@ -1,0 +1,78 @@
+/* Animaciones */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Cards de solicitudes */
+.solicitud-card {
+  animation: fadeInUp 0.6s ease-out;
+  transition: all 0.3s ease;
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.solicitud-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 15px 35px rgba(0, 0, 0, 0.15) !important;
+}
+
+.solicitud-card .card-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Estados de solicitud */
+.badge {
+  border-radius: 10px;
+  font-weight: 500;
+}
+
+/* Enlaces */
+.card-title a:hover {
+  text-decoration: underline !important;
+}
+
+/* Texto pequeño */
+.text-sm {
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .d-flex.gap-2 {
+    flex-direction: column;
+    gap: 0.5rem !important;
+  }
+  
+  .btn-sm {
+    font-size: 0.8rem;
+  }
+}
+
+/* Estados específicos */
+.bg-warning.text-dark {
+  color: #856404 !important;
+}
+
+.border-start {
+  border-left-width: 4px !important;
+}
+
+/* Loading y error states */
+.spinner-border {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}

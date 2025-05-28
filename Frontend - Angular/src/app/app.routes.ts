@@ -6,10 +6,12 @@ import { ViviendaListComponent } from './components/vivienda/vivienda-list/vivie
 import { ViviendaDetailsComponent } from './components/vivienda/vivienda-details/vivienda-details.component';
 import { ViviendaSearchComponent } from './components/vivienda/vivienda-search/vivienda-search.component';
 import { HomeComponent } from './components/layout/home/home.component'; // <-- Agregar import
+import { MisSolicitudesComponent } from './components/solicitudes/mis-solicitudes/mis-solicitudes.component';
+import { SolicitudesRecibidasComponent } from './components/solicitudes/solicitudes-recibidas/solicitudes-recibidas.component';
 
 export const routes: Routes = [
   // Home
-  { path: '', component: HomeComponent }, 
+  { path: '', component: HomeComponent },
 
   // Actores
   { path: 'login', component: LoginComponent },
@@ -23,11 +25,16 @@ export const routes: Routes = [
   { path: 'nuevo-anuncio', component: ViviendaFormComponent },
   { path: 'editar-vivienda/:id', component: ViviendaFormComponent },
   { path: 'mis-anuncios', component: ViviendaListComponent },
-    // Vivienda detalles
-  { path: 'anuncio/:id', component: ViviendaDetailsComponent },
   
+  // Vivienda detalles
+  { path: 'anuncio/:id', component: ViviendaDetailsComponent },
+
   // Búsqueda de viviendas
   { path: 'buscar', component: ViviendaSearchComponent },
+
+  // Solicitudes
+  { path: 'mis-solicitudes', component: MisSolicitudesComponent },
+  { path: 'solicitudes-recibidas', component: SolicitudesRecibidasComponent },
 
   // Redirección por defecto
   { path: '**', redirectTo: '', pathMatch: 'full' }

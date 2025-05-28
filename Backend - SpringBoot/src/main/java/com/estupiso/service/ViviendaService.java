@@ -1,10 +1,7 @@
 package com.estupiso.service;
 
 import com.estupiso.dto.ViviendaDto;
-import com.estupiso.model.Anunciante;
-import com.estupiso.model.Estudiante;
-import com.estupiso.model.FotoVivienda;
-import com.estupiso.model.Vivienda;
+import com.estupiso.model.*;
 import com.estupiso.repository.EstudianteRepository;
 import com.estupiso.repository.ViviendaRepository;
 import com.estupiso.security.JWTUtils;
@@ -53,7 +50,7 @@ public class ViviendaService {
 
 
     public List<Vivienda> findAllViviendasByAnunciante() {
-        Anunciante userLogin = jwtUtils.userLogin();
+        Anunciante userLogin = (Anunciante) jwtUtils.userLogin();
         if (userLogin != null) {
            Optional<List<Vivienda>> viviendasO = viviendaRepository.findAllByAnuncianteId(userLogin.getId());
             return viviendasO.orElse(null);
@@ -93,9 +90,9 @@ public class ViviendaService {
         }
         return null;
     }    public Page<Vivienda> buscarViviendas(String comunidad, String provincia, String municipio,
-                                          String nombre, String tipoVivienda, Double precioMin, Double precioMax,
-                                          Integer habitaciones, boolean soloDisponibles, String direccion, 
-                                          int pagina, int tamañoPagina) {
+                                               String nombre, TiposVivienda tipoVivienda, Double precioMin, Double precioMax,
+                                               Integer habitaciones, boolean soloDisponibles, String direccion,
+                                               int pagina, int tamañoPagina) {
         Specification<Vivienda> spec = Specification.where(null);
         if (comunidad != null) {
             spec = spec.and(ViviendaSpecification.conComunidad(comunidad));
@@ -121,7 +118,7 @@ public class ViviendaService {
 
     @Transactional
     public Vivienda createVivienda(Vivienda vivienda) {
-        Anunciante anuncianteLogin = jwtUtils.userLogin();
+        Anunciante anuncianteLogin = (Anunciante) jwtUtils.userLogin();
         if (anuncianteLogin != null) {
             // Primero establecemos la fecha de publicación y el anunciante
             vivienda.setFechaPublicacion(LocalDateTime.now());
@@ -172,7 +169,7 @@ public class ViviendaService {
     public Vivienda updateVivienda(Vivienda viviendaU) {
         Optional<Vivienda> viviendaO = viviendaRepository.findById(viviendaU.getId());
         if (viviendaO.isPresent()) {
-            Anunciante anuncianteLogin = jwtUtils.userLogin();
+            Anunciante anuncianteLogin = (Anunciante) jwtUtils.userLogin();
             if (anuncianteLogin != null && Objects.equals(viviendaU.getAnunciante().getId(), anuncianteLogin.getId())) {
                 Vivienda viviendaExistente = viviendaO.get();
                 
@@ -215,7 +212,7 @@ public class ViviendaService {
         Optional<Vivienda> viviendaO = viviendaRepository.findById(idVivienda);
         Optional<Estudiante> estudianteO = estudianteRepository.findById(idResidente);
         if (estudianteO.isPresent() && viviendaO.isPresent()) {
-            Anunciante anuncianteLogin = jwtUtils.userLogin();
+            Anunciante anuncianteLogin = (Anunciante) jwtUtils.userLogin();
             if (anuncianteLogin != null && estudianteO.get().getVivienda() != viviendaO.get()) {
                 viviendaO.get().añadirResidente(estudianteO.get());
                 estudianteRepository.save(estudianteO.get());
@@ -229,7 +226,7 @@ public class ViviendaService {
     public boolean deleteVivienda(int idVivienda) {
         Optional<Vivienda> viviendaO = viviendaRepository.findById(idVivienda);
         if (viviendaO.isPresent()) {
-            Anunciante anuncianteLogin = jwtUtils.userLogin();
+            Anunciante anuncianteLogin = (Anunciante) jwtUtils.userLogin();
             if (anuncianteLogin != null) {
                 // Verificación directa por ID en lugar de usar contains()
                 if (viviendaO.get().getAnunciante().getId() == anuncianteLogin.getId()) {

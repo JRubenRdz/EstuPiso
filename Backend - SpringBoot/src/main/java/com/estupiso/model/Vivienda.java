@@ -5,10 +5,7 @@ import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -16,8 +13,7 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
-@Getter
-@Setter
+@Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
@@ -50,8 +46,8 @@ public class Vivienda extends DomainEntity {
     @NotNull
     private TiposVivienda tipoVivienda;
 
-    @NotBlank
-    private String numeroHabitaciones;
+    @Column
+    private int numeroHabitaciones;
 
     @NotNull
     private LocalDateTime fechaPublicacion;

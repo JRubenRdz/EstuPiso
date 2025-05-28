@@ -1,35 +1,32 @@
 package com.estupiso.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
-import com.fasterxml.jackson.annotation.JsonIdentityInfo;
-import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.ObjectIdGenerators;
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.ManyToOne;
+import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.*;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Entity
-public class Municipio extends DomainEntity{
+@Table(name = "municipio")
+public class Municipio extends DomainEntity {
+
+    @NotNull
+    @Column(name = "cod_municipio", columnDefinition = "INTEGER")
+    private Integer codMunicipio;
+
+    @NotNull
+    @Column(columnDefinition = "INTEGER")
+    private Integer dc;
 
     @NotBlank
-    @Column(name = "cod_municipio")
-    private int codMunicipio;
-
-    @NotBlank
-    private int dc;
-
-    @NotBlank
+    @Column(columnDefinition = "VARCHAR(255)")
     private String nombre;
 
-    @ManyToOne
-    @JoinColumn(name = "provincia_id", nullable = false)
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "provincia_id", nullable = false, columnDefinition = "INTEGER")
     @JsonBackReference
     private Provincia provincia;
-
 }

@@ -49,7 +49,7 @@ public class AnuncianteService {
 
     @Transactional
     public Anunciante updateAnunciante(Anunciante anuncianteU) {
-        Anunciante anunciante = jwtUtils.userLogin();
+        Anunciante anunciante = (Anunciante) jwtUtils.userLogin();
         if (anunciante != null) {
             anunciante.setContraseña(passwordEncoder.encode(anuncianteU.getContraseña()));
             anunciante.setRol(Roles.ANUNCIANTE);
@@ -79,7 +79,7 @@ public class AnuncianteService {
 
     @Transactional
     public boolean deleteAnunciante() {
-        Anunciante anunciante = jwtUtils.userLogin();
+        Anunciante anunciante = (Anunciante) jwtUtils.userLogin();
         if (anunciante != null) {
             anuncianteRepository.delete(anunciante);
             return true;

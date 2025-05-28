@@ -64,19 +64,26 @@
       <div class="row g-2">
 
         <!-- Tipo de vivienda -->
-        <div class="col-md-3">
+        <div class="col-md-4">
+          <label for="tipoVivienda" class="form-label">Tipo de vivienda</label>
           <select 
+            id="tipoVivienda"
+            class="form-select" 
             [(ngModel)]="filters.tipoVivienda" 
-            name="tipo"
-            (change)="onFilterChange()"
-            class="form-select form-select-sm">
-            <option value="">Tipo</option>
-            <option *ngFor="let tipo of tiposVivienda" [value]="tipo">{{ tipo }}</option>
+            name="tipoVivienda"
+            (change)="onFilterChange()">
+            <option value="">Todos los tipos</option>
+            <option 
+              *ngFor="let tipo of tiposVivienda" 
+              [value]="tipo.value">
+              {{ tipo.label }}
+            </option>
           </select>
         </div>
 
         <!-- Habitaciones -->
         <div class="col-md-3">
+          <label for="numeroHabitaciones" class="form-label">Número de habitaciones</label>
           <select 
             [(ngModel)]="filters.habitaciones" 
             name="habitaciones"
@@ -92,25 +99,25 @@
 
         <!-- Precio mínimo -->
         <div class="col-md-3">
+          <label for="precioMin" class="form-label">Precio mínimo</label>
           <input
             type="number"
             [(ngModel)]="filters.precioMin"
             name="precioMin"
             (input)="onFilterChange()"
-            placeholder="Precio mín."
             class="form-control form-control-sm">
         </div>
 
         <!-- Precio máximo -->
         <div class="col-md-3">
+          <label for="precioMax" class="form-label">Precio máximo</label>
           <input
             type="number"
             [(ngModel)]="filters.precioMax"
             name="precioMax"
             (input)="onFilterChange()"
-            placeholder="Precio máx."            class="form-control form-control-sm">
+            class="form-control form-control-sm">
         </div>
-
       </div>
     </div>
 
@@ -204,13 +211,29 @@
             
             <!-- Imagen principal -->
             <div class="position-relative">
+              <!-- Mostrar imagen si existe -->
               <img 
-                [src]="vivienda.fotos && vivienda.fotos.length > 0 ? vivienda.fotos[0].url : '/assets/placeholder-house.jpg'" 
+                *ngIf="tieneImagen(vivienda)"
+                [src]="getImagenPrincipal(vivienda)"
                 [alt]="vivienda.nombre"
-                class="card-img-top"
-                style="height: 200px; object-fit: cover;">
+                (error)="onImageError($event)"
+                class="card-img-top vivienda-image"
+                style="height: 200px; object-fit: cover;"
+                loading="lazy">
+                
+              <!-- Placeholder cuando no hay imagen -->
+              <div 
+                *ngIf="!tieneImagen(vivienda)"
+                class="card-img-top d-flex align-items-center justify-content-center bg-light text-muted"
+                style="height: 200px;">
+                <div class="text-center">
+                  <i class="bi bi-house display-4"></i>
+                  <div class="mt-2">Sin imagen</div>
+                </div>
+              </div>
+              
               <div class="position-absolute top-0 end-0 m-2">
-                <span class="badge bg-primary">{{ formatPrice(vivienda.precio) }}/mes</span>
+                <span class="badge bg-primary">{{ formatPrice(vivienda.precioMensual || vivienda.precio) }}/mes</span>
               </div>
             </div>
 
@@ -218,7 +241,7 @@
             <div class="card-body d-flex flex-column">
               <h5 class="card-title">{{ vivienda.nombre }}</h5>
               <p class="card-text text-muted mb-2">
-                <i class="bi bi-geo-alt"></i> {{ vivienda.direccion }}, {{ vivienda.municipio?.nombre }}
+                <i class="bi bi-geo-alt"></i> {{ getUbicacionCompleta(vivienda) }}
               </p>
               
               <!-- Características -->
@@ -227,12 +250,6 @@
                   <span *ngIf="vivienda.habitaciones">
                     <i class="bi bi-door-open"></i> {{ vivienda.habitaciones }} hab.
                   </span>
-                  <span *ngIf="vivienda.banos">
-                    <i class="bi bi-droplet"></i> {{ vivienda.banos }} baños
-                  </span>
-                  <span *ngIf="vivienda.metrosCuadrados">
-                    <i class="bi bi-rulers"></i> {{ vivienda.metrosCuadrados }}m²
-                  </span>
                 </small>
               </div>
 
@@ -240,10 +257,11 @@
               <div class="mb-3">
                 <span 
                   class="badge"
-                  [class.bg-success]="vivienda.disponible"
-                  [class.bg-danger]="!vivienda.disponible">
-                  <i [class]="vivienda.disponible ? 'bi bi-check-circle' : 'bi bi-x-circle'"></i>
-                  {{ vivienda.disponible ? 'Disponible' : 'Ocupada' }}
+                  [class.bg-success]="esDisponible(vivienda)"
+                  [class.bg-warning]="esParcialmenteOcupada(vivienda)"
+                  [class.bg-danger]="!esDisponible(vivienda) && !esParcialmenteOcupada(vivienda)">
+                  <i [class]="getEstadoIcon(vivienda)"></i>
+                  {{ getEstadoTexto(vivienda) }}
                 </span>
               </div>
 
@@ -259,16 +277,27 @@
               <!-- Acciones -->
               <div class="d-grid gap-2">
                 <a 
-                  [routerLink]="['/vivienda', vivienda.id]" 
+                  [routerLink]="['/anuncio', vivienda.id]" 
                   class="btn btn-outline-primary btn-sm">
                   <i class="bi bi-eye"></i> Ver detalles
                 </a>
                 <button 
-                  *ngIf="vivienda.disponible" 
+                  *ngIf="esDisponible(vivienda)" 
                   class="btn btn-primary btn-sm"
                   (click)="contactar(vivienda)">
-                  <i class="bi bi-telephone"></i> Contactar
+                  <i class="bi bi-heart"></i> Solicitar
                 </button>
+                <button 
+                  *ngIf="esParcialmenteOcupada(vivienda)" 
+                  class="btn btn-warning btn-sm"
+                  (click)="contactar(vivienda)">
+                  <i class="bi bi-people"></i> Consultar
+                </button>
+                <span 
+                  *ngIf="!esDisponible(vivienda) && !esParcialmenteOcupada(vivienda)"
+                  class="btn btn-secondary btn-sm disabled">
+                  <i class="bi bi-x-circle"></i> Completa
+                </span>
               </div>
             </div>
           </div>

@@ -44,7 +44,7 @@ public class EstudianteService {
 
     @Transactional
     public Estudiante updateEstudiante(Estudiante estudianteU) {
-        Estudiante estudiante = jwtUtils.userLogin();
+        Estudiante estudiante = (Estudiante) jwtUtils.userLogin();
         if (estudiante != null) {
             estudiante.setNombre(estudianteU.getNombre());
             estudiante.setUsuario(estudianteU.getUsuario());
@@ -72,7 +72,7 @@ public class EstudianteService {
 
     @Transactional
     public boolean deleteEstudiante() {
-        Estudiante estudiante = jwtUtils.userLogin();
+        Estudiante estudiante = (Estudiante) jwtUtils.userLogin();
         if (estudiante != null) {
             estudianteRepository.deleteById(estudiante.getId());
             return true;

@@ -1,72 +1,129 @@
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
-import { Router, RouterLink } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { jwtDecode } from 'jwt-decode';
-import { EstudianteService } from '../../../service/estudiante.service';
-import { AnuncianteService } from '../../../service/anunciante.service';
-import { AdminService } from '../../../service/admin.service';
+import { UsuarioService } from '../../../service/usuario.service';
 
 @Component({
   selector: 'app-navbar',
-  imports: [CommonModule, RouterLink],
+  standalone: true,
+  imports: [CommonModule, RouterModule],
   templateUrl: './navbar.component.html',
-  styleUrl: './navbar.component.css',
-  providers: [EstudianteService, AnuncianteService, AdminService]
+  styleUrl: './navbar.component.css'
 })
-export class NavbarComponent {
-  token: string | null = localStorage.getItem('token');
-  rol!: string
-  nombreUsuario !: string
+export class NavbarComponent implements OnInit {
+  // Propiedades existentes
+  id: number | null = null;
+  username: string | null = null;
+  email: string | null = null;
+  rol: string | null = null;
+  isLoggedIn = false;
+
+  // NUEVAS propiedades para el modal de eliminar cuenta
+  mostrandoModalEliminar = false;
+  eliminandoCuenta = false;
 
   constructor(
     private router: Router,
-    private estudianteService: EstudianteService,
-    private anuncianteService: AnuncianteService,
-    private adminService: AdminService
-  ) {
-    if (this.token !== null && this.token) {
-      this.nombreUsuario = jwtDecode(this.token).sub ?? '';
-      this.rol = jwtDecode<{ rol: string }>(this.token).rol;
+    private usuarioService: UsuarioService // AÑADIR
+  ) {}
+
+  ngOnInit(): void {
+    this.checkUserAuthentication();
+  }
+
+  checkUserAuthentication(): void {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const decodedToken: any = jwtDecode(token);
+        
+        this.id = decodedToken.id;
+        this.username = decodedToken.sub;
+        this.email = decodedToken.email;
+        this.rol = decodedToken.rol;
+        
+        this.isLoggedIn = true;
+      } catch (error) {
+        console.error('Error al decodificar token:', error);
+        this.logout();
+      }
+    } else {
+      // Limpiar datos cuando no hay token
+      this.id = null;
+      this.username = null;
+      this.email = null;
+      this.rol = null;
+      this.isLoggedIn = false;
     }
   }
 
-  login() {
-    this.router.navigateByUrl("/login");
+  logout(): void {
+    localStorage.removeItem('token');
+    this.id = null;
+    this.username = null;
+    this.email = null;
+    this.rol = null;
+    this.isLoggedIn = false;
+    this.router.navigate(['/']);
   }
 
-  register() {
-    this.router.navigateByUrl("/register");
+  reloadAuth(): void {
+    this.checkUserAuthentication();
   }
 
-  misDatos() {
-    this.router.navigateByUrl("/mis-datos");
+  // NUEVOS métodos para el modal de eliminar cuenta
+  mostrarModalEliminarCuenta(): void {
+    this.mostrandoModalEliminar = true;
   }
 
-  logout() {
-    localStorage.removeItem("token");
-    this.router.navigate(['/']).then(() => window.location.reload());
+  cerrarModalEliminar(): void {
+    this.mostrandoModalEliminar = false;
+    this.eliminandoCuenta = false;
   }
 
-  eliminarUsuario() {
-    if (!this.rol) return;
-    let eliminar$;
-    if (this.rol === 'ESTUDIANTE') {
-      eliminar$ = this.estudianteService.eliminarEstudianteLogeado();
-    } else if (this.rol === 'ANUNCIANTE') {
-      eliminar$ = this.anuncianteService.eliminarAnuncianteLogeado();
-    } else if (this.rol === 'ADMIN') {
-      eliminar$ = this.adminService.eliminarAdminLogeado();
-    } else {
+  // CORREGIDO: Eliminar cuenta según el rol
+  eliminarCuenta(): void {
+    if (!this.rol) {
+      alert('No se pudo determinar el tipo de usuario');
+      this.eliminandoCuenta = false;
       return;
     }
-    eliminar$.subscribe({
-      next: () => {
-        localStorage.removeItem('token');
-        this.router.navigate(['/']).then(() => window.location.reload());
-      },
-      error: () => {
-        alert('Error al eliminar el usuario.');
-      }
-    });
+
+    this.eliminandoCuenta = true;
+
+    try {
+      this.usuarioService.eliminarCuentaSegunRol(this.rol).subscribe({
+        next: () => {
+          alert('Cuenta eliminada correctamente');
+          this.logout();
+          this.cerrarModalEliminar();
+        },
+        error: (error) => {
+          console.error('Error al eliminar cuenta:', error);
+          this.eliminandoCuenta = false;
+          alert('Error al eliminar la cuenta: ' + (error.error?.message || 'Error desconocido'));
+        }
+      });
+    } catch (error) {
+      console.error('Error:', error);
+      this.eliminandoCuenta = false;
+      alert('Error: ' + (error as Error).message);
+    }
+  }
+
+  // OPCIONAL: Método para confirmar antes de eliminar
+  confirmarEliminacion(): void {
+    const tipoUsuario = this.rol?.toLowerCase() || 'usuario';
+    const confirmacion = confirm(
+      `¿Estás seguro de que quieres eliminar tu cuenta de ${tipoUsuario}?\n\n` +
+      'Esta acción no se puede deshacer y se eliminarán todos tus datos.'
+    );
+    
+    if (confirmacion) {
+      this.eliminarCuenta();
+    } else {
+      this.cerrarModalEliminar();
+    }
   }
 }

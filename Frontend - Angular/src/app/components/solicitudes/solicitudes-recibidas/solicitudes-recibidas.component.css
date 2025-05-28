@@ -1,0 +1,303 @@
+/* Animaciones */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+/* Cards de solicitudes */
+.solicitud-card {
+  animation: fadeInUp 0.6s ease-out;
+  transition: all 0.3s ease;
+  border-radius: 15px;
+  overflow: hidden;
+}
+
+.solicitud-card:hover {
+  transform: translateY(-5px);
+}
+
+.solicitud-pendiente {
+  border-left: 4px solid #ffc107;
+}
+
+.solicitud-pendiente:hover {
+  box-shadow: 0 15px 35px rgba(255, 193, 7, 0.2) !important;
+}
+
+.solicitud-respondida {
+  opacity: 0.95;
+}
+
+.solicitud-respondida:hover {
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+  opacity: 1;
+}
+
+/* Layout de las cards */
+.solicitud-card .card-body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.acciones-solicitud {
+  margin-top: auto;
+}
+
+/* Información del estudiante */
+.estudiante-info {
+  background: rgba(13, 110, 253, 0.05);
+  border-radius: 10px;
+  padding: 0.75rem;
+  border: 1px solid rgba(13, 110, 253, 0.1);
+}
+
+.vivienda-info {
+  background: rgba(108, 117, 125, 0.05);
+  border-radius: 8px;
+  padding: 0.75rem;
+  border: 1px solid rgba(108, 117, 125, 0.1);
+}
+
+/* Mensaje del estudiante */
+.mensaje-estudiante .bg-light {
+  border-left: 4px solid #e9ecef;
+  position: relative;
+}
+
+.mensaje-estudiante .bg-light::before {
+  content: '"';
+  position: absolute;
+  top: -5px;
+  left: 10px;
+  font-size: 2rem;
+  color: #adb5bd;
+  font-family: serif;
+}
+
+/* Respuesta del anunciante */
+.respuesta-anunciante .border-start {
+  border-left-width: 4px !important;
+}
+
+/* Tabs personalizados */
+.nav-tabs-custom {
+  border-bottom: 2px solid #e9ecef;
+}
+
+.nav-tabs-custom .nav-link {
+  border: none;
+  border-radius: 10px 10px 0 0;
+  color: #6c757d;
+  font-weight: 500;
+  padding: 1rem 1.5rem;
+  margin-right: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.nav-tabs-custom .nav-link:hover {
+  background-color: rgba(13, 110, 253, 0.1);
+  color: #0d6efd;
+  border: none;
+}
+
+.nav-tabs-custom .nav-link.active {
+  background-color: #0d6efd;
+  color: white;
+  border: none;
+  box-shadow: 0 4px 15px rgba(13, 110, 253, 0.3);
+}
+
+.nav-tabs-custom .nav-link.active .badge {
+  background-color: rgba(255, 255, 255, 0.2) !important;
+  color: white !important;
+}
+
+/* Estados de solicitud */
+.badge {
+  border-radius: 10px;
+  font-weight: 500;
+  font-size: 0.8rem;
+}
+
+/* Botones */
+.btn {
+  border-radius: 8px;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn-success:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(25, 135, 84, 0.4);
+}
+
+.btn-outline-danger:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 5px 15px rgba(220, 53, 69, 0.4);
+}
+
+/* Modal personalizado */
+.modal-content {
+  border-radius: 15px;
+  border: none;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+.modal-header {
+  border-radius: 15px 15px 0 0;
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+}
+
+.solicitud-summary {
+  border-radius: 10px;
+  animation: slideInLeft 0.3s ease-out;
+}
+
+/* Enlaces */
+a:hover {
+  text-decoration: underline !important;
+}
+
+/* Texto pequeño */
+.text-sm {
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* Loading states */
+.spinner-border {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+/* Empty states */
+.display-1, .display-3 {
+  opacity: 0.7;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .nav-tabs-custom .nav-link {
+    padding: 0.75rem 1rem;
+    margin-right: 0.25rem;
+    font-size: 0.9rem;
+  }
+  
+  .estudiante-info, .vivienda-info {
+    padding: 0.5rem;
+  }
+  
+  .d-flex.gap-2 {
+    flex-direction: column;
+    gap: 0.5rem !important;
+  }
+  
+  .modal-dialog {
+    margin: 0.5rem;
+  }
+  
+  .solicitud-card .card-body {
+    padding: 1rem !important;
+  }
+}
+
+@media (max-width: 576px) {
+  .acciones-solicitud {
+    flex-direction: column;
+  }
+  
+  .acciones-solicitud .btn {
+    margin-bottom: 0.5rem;
+  }
+  
+  .acciones-solicitud .btn:last-child {
+    margin-bottom: 0;
+  }
+}
+
+/* Estados específicos mejorados */
+.bg-warning.text-dark {
+  color: #856404 !important;
+}
+
+.bg-success {
+  background-color: #198754 !important;
+}
+
+.bg-danger {
+  background-color: #dc3545 !important;
+}
+
+.bg-secondary {
+  background-color: #6c757d !important;
+}
+
+/* Hover effects para mejor UX */
+.estudiante-info:hover {
+  background: rgba(13, 110, 253, 0.1) !important;
+  transform: translateX(5px);
+  transition: all 0.3s ease;
+}
+
+.vivienda-info:hover {
+  background: rgba(108, 117, 125, 0.1) !important;
+  transition: all 0.3s ease;
+}
+
+/* Mejoras de accesibilidad */
+.btn:focus {
+  box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+}
+
+.modal-content:focus-within {
+  outline: none;
+}
+
+/* Gradientes sutiles para mejor apariencia */
+.solicitud-pendiente::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #ffc107, #fd7e14);
+  border-radius: 15px 15px 0 0;
+}
+
+.solicitud-respondida::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: linear-gradient(90deg, #6c757d, #495057);
+  border-radius: 15px 15px 0 0;
+}
+
+.solicitud-card {
+  position: relative;
+}

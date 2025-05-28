@@ -35,7 +35,7 @@ public class AdminService {
 
     @Transactional
     public Admin updateAdmin(Admin adminU) {
-        Admin admin = jwtUtils.userLogin();
+        Admin admin = (Admin) jwtUtils.userLogin();
         if (admin != null) {
             admin.setNombre(adminU.getNombre());
             admin.setEmail(adminU.getEmail());
@@ -62,7 +62,7 @@ public class AdminService {
 
     @Transactional
     public boolean deleteAdmin() {
-        Admin admin = jwtUtils.userLogin();
+        Admin admin = (Admin) jwtUtils.userLogin();
         if (admin != null) {
             adminRepository.deleteById(admin.getId());
             return true;

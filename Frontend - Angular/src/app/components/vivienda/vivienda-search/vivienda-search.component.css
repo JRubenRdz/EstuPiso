@@ -160,6 +160,7 @@
   max-width: 1200px;
   margin: 0 auto;
   padding: 20px;
+  min-height: 200px;
 }
 
 /* Loading */
@@ -239,6 +240,7 @@
   position: relative;
   height: 200px;
   overflow: hidden;
+  transition: opacity 0.3s ease;
 }
 
 .card-img {
@@ -250,6 +252,10 @@
 
 .vivienda-card:hover .card-img {
   transform: scale(1.05);
+}
+
+.vivienda-image:hover {
+  opacity: 0.9;
 }
 
 .price-badge {
@@ -426,4 +432,52 @@
   .vivienda-actions {
     flex-direction: column;
   }
+}
+
+/* Evitar parpadeos */
+.results-container {
+  min-height: 200px;
+}
+
+.vivienda-image {
+  transition: opacity 0.3s ease;
+}
+
+.vivienda-image:hover {
+  opacity: 0.9;
+}
+
+/* Placeholder mejorado */
+.bg-light {
+  background-color: #f8f9fa !important;
+}
+
+/* Evitar layout shift */
+.card {
+  transition: transform 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+}
+
+/* Loading states */
+.spinner-border {
+  width: 2rem;
+  height: 2rem;
+}
+
+/* Responsive images */
+.card-img-top {
+  border-radius: 0.375rem 0.375rem 0 0;
+}
+
+/* Smooth transitions */
+.search-form, .results-section {
+  transition: opacity 0.3s ease;
+}
+
+.search-form.loading {
+  opacity: 0.7;
+  pointer-events: none;
 }

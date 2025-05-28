@@ -41,10 +41,10 @@
             </button>
             
             <button 
-              *ngIf="esEstudiante && !yaEsResidente && getEstadoVivienda() !== 'Completa'" 
+              *ngIf="puedeAplicar()" 
               class="btn btn-primary"
-              (click)="aplicarVivienda()">
-              <i class="bi bi-heart me-2"></i>Aplicar
+              (click)="mostrarFormularioSolicitud()">
+              <i class="bi bi-heart me-2"></i>Solicitar
             </button>
             
             <span 

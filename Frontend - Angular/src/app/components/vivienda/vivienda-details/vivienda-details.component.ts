@@ -4,10 +4,12 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ViviendaService } from '../../../service/vivienda.service';
 import { jwtDecode } from 'jwt-decode';
 import { MapComponent } from '../../map/map.component';
+import { SolicitudViviendaService } from '../../../service/solicitudvivienda.service';
+import { FormsModule } from '@angular/forms';
 
 @Component({
   selector: 'app-vivienda-details',
-  imports: [CommonModule, MapComponent],
+  imports: [CommonModule, MapComponent, FormsModule], // <-- Añadir FormsModule
   templateUrl: './vivienda-details.component.html',
   styleUrl: './vivienda-details.component.css'
 })
@@ -22,43 +24,79 @@ export class ViviendaDetailsComponent implements OnInit {
   puedeEditar = false;
   yaEsResidente = false;
 
+  // Nuevas propiedades para solicitudes
+  tieneSolicitudPendiente = false;
+  solicitudActual: any = null;
+  mostrandoFormularioSolicitud = false;
+  mensajeSolicitud = '';
+  enviandoSolicitud = false;
+
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private viviendaService: ViviendaService
+    private viviendaService: ViviendaService,
+    private solicitudService: SolicitudViviendaService
   ) {}
 
   ngOnInit(): void {
+    this.viviendaId = Number(this.route.snapshot.paramMap.get('id'));
     this.checkUserAuthentication();
-    this.getViviendaId();
     this.loadViviendaDetails();
   }
 
+  // CORREGIDO: Método sin AuthService
   checkUserAuthentication(): void {
     const token = localStorage.getItem('token');
     if (token) {
       try {
-        const decoded: any = jwtDecode(token);
+        const decodedToken: any = jwtDecode(token);
+        
         this.usuarioActual = {
-          id: decoded.id,
-          usuario: decoded.sub,
-          rol: decoded.rol
+          id: decodedToken.id,
+          nombre: decodedToken.sub, 
+          email: decodedToken.email,
+          tipoUsuario: decodedToken.rol 
         };
-        this.esAnunciante = decoded.rol === 'ANUNCIANTE';
-        this.esEstudiante = decoded.rol === 'ESTUDIANTE';
+
+        // Establecer roles
+        this.esEstudiante = this.usuarioActual.tipoUsuario === 'ESTUDIANTE';
+        this.esAnunciante = this.usuarioActual.tipoUsuario === 'ANUNCIANTE';
+        
+        console.log('Usuario autenticado:', this.usuarioActual);
+
+        // Verificar si tiene solicitud pendiente (solo para estudiantes)
+        if (this.esEstudiante && this.viviendaId) {
+          this.verificarSolicitudPendiente();
+        }
+        
       } catch (error) {
         console.error('Error al decodificar token:', error);
+        this.usuarioActual = null;
+        this.esEstudiante = false;
+        this.esAnunciante = false;
+        localStorage.removeItem('token');
       }
+    } else {
+      this.usuarioActual = null;
+      this.esEstudiante = false;
+      this.esAnunciante = false;
     }
   }
 
-  getViviendaId(): void {
-    this.route.params.subscribe(params => {
-      this.viviendaId = +params['id'];
-      if (!this.viviendaId) {
-        this.router.navigate(['/']);
-      }
-    });
+  verificarSolicitudPendiente(): void {
+    if (this.usuarioActual && this.esEstudiante) {
+      this.solicitudService.obtenerSolicitudesEstudiante(this.usuarioActual.id).subscribe({
+        next: (solicitudes) => {
+          this.solicitudActual = solicitudes.find(s => 
+            s.viviendaId === this.viviendaId && s.estado === 'PENDIENTE'
+          );
+          this.tieneSolicitudPendiente = !!this.solicitudActual;
+        },
+        error: (error) => {
+          console.error('Error al verificar solicitudes:', error);
+        }
+      });
+    }
   }
 
   loadViviendaDetails(): void {
@@ -92,21 +130,6 @@ export class ViviendaDetailsComponent implements OnInit {
   editarVivienda(): void {
     if (this.puedeEditar) {
       this.router.navigate(['/editar-vivienda', this.viviendaId]);
-    }
-  }
-
-  aplicarVivienda(): void {
-    if (this.esEstudiante && !this.yaEsResidente) {
-      this.viviendaService.añadirResidente(this.viviendaId, this.usuarioActual.id).subscribe({
-        next: () => {
-          alert('¡Solicitud enviada correctamente!');
-          this.loadViviendaDetails(); // Recargar para actualizar estado
-        },
-        error: (error) => {
-          console.error('Error al aplicar:', error);
-          alert('Error al enviar la solicitud');
-        }
-      });
     }
   }
 
@@ -148,5 +171,88 @@ export class ViviendaDetailsComponent implements OnInit {
     if (target) {
       target.src = '/assets/placeholder-house.jpg';
     }
+  }
+
+  // NUEVO: Mostrar formulario de solicitud
+  mostrarFormularioSolicitud(): void {
+    if (!this.usuarioActual || !this.esEstudiante) {
+      alert('Debes estar logueado como estudiante para solicitar una vivienda');
+      return;
+    }
+    
+    this.mostrandoFormularioSolicitud = true;
+    this.mensajeSolicitud = '';
+  }
+
+  // NUEVO: Cancelar formulario
+  cancelarSolicitud(): void {
+    this.mostrandoFormularioSolicitud = false;
+    this.mensajeSolicitud = '';
+  }
+
+  // NUEVO: Enviar solicitud
+  enviarSolicitud(): void {
+    if (!this.usuarioActual || !this.esEstudiante) {
+      alert('Debes estar logueado como estudiante para solicitar una vivienda');
+      return;
+    }
+
+    this.enviandoSolicitud = true;
+
+    const solicitudDto = {
+      viviendaId: this.viviendaId,
+      mensaje: this.mensajeSolicitud.trim() || undefined
+    };
+
+    this.solicitudService.crearSolicitud(this.usuarioActual.id, solicitudDto).subscribe({
+      next: (solicitud) => {
+        this.solicitudActual = solicitud;
+        this.tieneSolicitudPendiente = true;
+        this.mostrandoFormularioSolicitud = false;
+        this.mensajeSolicitud = '';
+        this.enviandoSolicitud = false;
+        
+        // Mostrar modal de éxito
+        alert('¡Solicitud enviada correctamente! El anunciante será notificado.');
+      },
+      error: (error) => {
+        console.error('Error al enviar solicitud:', error);
+        this.enviandoSolicitud = false;
+        alert('Error al enviar la solicitud: ' + (error.error?.message || 'Error desconocido'));
+      }
+    });
+  }
+
+  // NUEVO: Cancelar solicitud pendiente
+  cancelarSolicitudPendiente(): void {
+    if (!this.solicitudActual || !this.usuarioActual) return;
+
+    if (confirm('¿Estás seguro de que quieres cancelar tu solicitud?')) {
+      this.solicitudService.cancelarSolicitud(this.solicitudActual.id, this.usuarioActual.id).subscribe({
+        next: () => {
+          this.solicitudActual = null;
+          this.tieneSolicitudPendiente = false;
+          alert('Solicitud cancelada correctamente');
+        },
+        error: (error) => {
+          console.error('Error al cancelar solicitud:', error);
+          alert('Error al cancelar la solicitud');
+        }
+      });
+    }
+  }
+
+  // Actualizar método existente
+  puedeAplicar(): boolean {
+    return this.esEstudiante && 
+           !this.yaEsResidente && 
+           !this.tieneSolicitudPendiente &&
+           this.getEstadoVivienda() !== 'Completa';
+  }
+
+  // Método que faltaba
+  aplicarVivienda(): void {
+    // Redirigir al formulario de solicitud o mostrar el modal
+    this.mostrarFormularioSolicitud();
   }
 }

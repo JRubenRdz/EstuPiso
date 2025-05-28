@@ -68,29 +68,7 @@ public class JWTUtils {
         Date fechaActual = new Date();
         Date fechaExpiracion = new Date(fechaActual.getTime() + DURACION_TOKEN);
         String rol = authentication.getAuthorities().iterator().next().getAuthority();
-
-        // Obtener el ID según el rol
-        int id;
-        switch (rol) {
-            case "ESTUDIANTE":
-                id = estudianteService.findByUsuario(username)
-                        .map(e -> e.getId())
-                        .orElse(null);
-                break;
-            case "ANUNCIANTE":
-                id = anuncianteService.findByUsuario(username)
-                        .map(a -> a.getId())
-                        .orElse(null);
-                break;
-            case "ADMIN":
-                id = adminService.findByUsuario(username)
-                        .map(a -> a.getId())
-                        .orElse(null);
-                break;
-            default:
-                id = 0;
-                break;
-        }
+        int id = actorService.findByUsuario(username).get().getId();
 
         // Construir el token, añadiendo el claim "id"
         String token = Jwts.builder()
@@ -103,7 +81,7 @@ public class JWTUtils {
         return token;
     }
 
-    public <T extends Actor> T userLogin() {
+    public Actor userLogin() {
         String usuario = SecurityContextHolder.getContext().getAuthentication().getName();
         if (StringUtils.isEmpty(usuario)) {
             return null;
@@ -116,9 +94,9 @@ public class JWTUtils {
 
         Actor actor = actorO.get();
         return switch (actor.getRol()) {
-            case ESTUDIANTE -> (T) estudianteService.findByUsuario(usuario).orElse(null);
-            case ADMIN -> (T) adminService.findByUsuario(usuario).orElse(null);
-            case ANUNCIANTE -> (T) anuncianteService.findByUsuario(usuario).orElse(null);
+            case ESTUDIANTE -> estudianteService.findByUsuario(usuario).orElse(null);
+            case ADMIN -> adminService.findByUsuario(usuario).orElse(null);
+            case ANUNCIANTE -> anuncianteService.findByUsuario(usuario).orElse(null);
             default -> null;
         };
     }

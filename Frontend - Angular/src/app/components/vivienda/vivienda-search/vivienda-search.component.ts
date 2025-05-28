@@ -54,7 +54,17 @@ export class ViviendaSearchComponent implements OnInit {
   noResults = false;
 
   // Tipos de vivienda disponibles
-  tiposVivienda = ['PISO', 'CASA', 'HABITACION', 'ESTUDIO'];
+  tiposVivienda = [
+    { value: 'PISO', label: 'Piso' },
+    { value: 'CASA', label: 'Casa' },
+    { value: 'HABITACION', label: 'Habitación' },
+    { value: 'ESTUDIO', label: 'Estudio' },
+    { value: 'OTRO', label: 'Otro' }
+  ];
+
+  // AÑADIR estas propiedades para evitar parpadeos:
+  private searchTimeout: any;
+  isSearching = false;
 
   constructor(
     private ubicacionService: UbicacionService,
@@ -132,36 +142,71 @@ export class ViviendaSearchComponent implements OnInit {
   }
 
   onFilterChange(): void {
-    if (this.hasActiveFilters()) {
-      this.currentPage = 0;
-      this.buscarViviendas();
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
     }
+    
+    // Esperar 300ms antes de buscar (debounce)
+    this.searchTimeout = setTimeout(() => {
+      this.onSearch();
+    }, 300);
+
   }
 
+  // AÑADIR método onSearch que falta:
   onSearch(): void {
-    this.currentPage = 0;
+    this.currentPage = 0; // Resetear a primera página
     this.buscarViviendas();
   }
 
   clearFilters(): void {
+    // Cancelar búsqueda pendiente
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+    
     this.filters = { soloDisponibles: true };
     this.provincias = [];
     this.municipios = [];
     this.searchResults = [];
     this.hasSearched = false;
     this.noResults = false;
+    this.isLoading = false;
+    this.isSearching = false;
+    this.currentPage = 0;
+  }
+
+
+  // AÑADIR método para convertir el enum antes de enviar:
+  private convertirTipoVivienda(tipo: string | undefined): string | undefined {
+    if (!tipo) return undefined;
+    
+    // Mapear valores del frontend a valores del enum del backend
+    const mapeoTipos: { [key: string]: string } = {
+      'PISO': 'PISO',
+      'CASA': 'CASA', 
+      'HABITACION': 'HABITACION',
+      'ESTUDIO': 'ESTUDIO',
+      'OTRO': 'OTRO'
+    };
+    
+    return mapeoTipos[tipo.toUpperCase()] || tipo.toUpperCase();
   }
 
   buscarViviendas(): void {
     this.isLoading = true;
     this.hasSearched = true;
+    this.isSearching = true;
+
+    // Convertir tipo de vivienda antes de enviar
+    const tipoViviendaConvertido = this.convertirTipoVivienda(this.filters.tipoVivienda);
 
     this.viviendaService.buscarViviendas(
       this.filters.comunidad,
       this.filters.provincia,
       this.filters.municipio,
       this.filters.nombre,
-      this.filters.tipoVivienda,
+      tipoViviendaConvertido, // USAR EL VALOR CONVERTIDO
       this.filters.precioMin,
       this.filters.precioMax,
       this.filters.habitaciones,
@@ -171,17 +216,22 @@ export class ViviendaSearchComponent implements OnInit {
       this.pageSize
     ).subscribe({
       next: (response) => {
+        console.log('Respuesta completa:', response);
+        console.log('Tipo vivienda enviado:', tipoViviendaConvertido);
+        
         this.searchResults = response.content || [];
         this.totalPages = response.totalPages || 0;
         this.totalElements = response.totalElements || 0;
         this.noResults = this.searchResults.length === 0;
         this.isLoading = false;
+        this.isSearching = false;
       },
       error: (error) => {
-        console.error('Error en búsqueda:', error);
-        this.searchResults = [];
-        this.noResults = true;
+        console.error('Error en la búsqueda:', error);
+        console.error('Tipo vivienda que causó error:', tipoViviendaConvertido);
         this.isLoading = false;
+        this.isSearching = false;
+        this.noResults = true;
       }
     });
   }
@@ -240,9 +290,156 @@ export class ViviendaSearchComponent implements OnInit {
     }).format(price);
   }
 
+  // MEJORAR método getImagenPrincipal:
+  getImagenPrincipal(vivienda: any): string {
+    console.log('Datos de vivienda para imagen:', {
+      id: vivienda.id,
+      fotos: vivienda.fotos
+    });
+
+    // Verificar estructura de fotos
+    if (vivienda.fotos && Array.isArray(vivienda.fotos) && vivienda.fotos.length > 0) {
+      const foto = vivienda.fotos[0];
+      console.log('Primera foto:', foto);
+      
+      if (typeof foto === 'string') {
+        return foto;
+      }
+      // CORREGIDO: usar 'imagen' en lugar de 'url'
+      if (foto.imagen) {
+        return foto.imagen;
+      }
+      if (foto.url) {
+        return foto.url;
+      }
+      if (foto.ruta) {
+        return foto.ruta;
+      }
+    }
+    
+    // Otros campos posibles
+    if (vivienda.imagen && typeof vivienda.imagen === 'string') {
+      return vivienda.imagen;
+    }
+    
+    if (vivienda.foto && typeof vivienda.foto === 'string') {
+      return vivienda.foto;
+    }
+    
+    // Imagen por defecto
+    return 'https://via.placeholder.com/400x200/e9ecef/6c757d?text=Sin+Imagen';
+  }
+
+  onImageError(event: Event): void {
+    const target = event.target as HTMLImageElement;
+    if (target && target.src !== 'https://via.placeholder.com/400x200/e9ecef/6c757d?text=Sin+Imagen') {
+      console.log('Error cargando imagen:', target.src);
+      target.src = 'https://via.placeholder.com/400x200/e9ecef/6c757d?text=Sin+Imagen';
+    }
+  }
+
+  // AÑADIR método para verificar si tiene imagen válida:
+  tieneImagen(vivienda: any): boolean {
+    const imagen = this.getImagenPrincipal(vivienda);
+    return imagen !== 'https://via.placeholder.com/400x200/e9ecef/6c757d?text=Sin+Imagen';
+  }
+
+  // CORREGIR método contactar:
   contactar(vivienda: any): void {
-    // TODO: Implementar lógica de contacto (modal, redirección, etc.)
-    console.log('Contactar con anunciante de vivienda:', vivienda.id);
-    alert(`Función de contacto en desarrollo para la vivienda: ${vivienda.nombre}`);
+    // Usar router en lugar de window.location para mejor navegación
+    window.open(`/anuncio/${vivienda.id}`, '_blank');
+  }
+
+  // AÑADIR método para limpiar timeout al destruir componente:
+  ngOnDestroy(): void {
+    if (this.searchTimeout) {
+      clearTimeout(this.searchTimeout);
+    }
+  }
+
+  // Añadir estos métodos al final de la clase:
+
+  // Método para obtener ubicación completa
+  getUbicacionCompleta(vivienda: any): string {
+    const partes: string[] = [];
+    
+    // Añadir calle y número si existen
+    if (vivienda.calle) {
+      let direccion = vivienda.calle;
+      if (vivienda.numero) {
+        direccion += `, ${vivienda.numero}`;
+      }
+      partes.push(direccion);
+    } else if (vivienda.direccion) {
+      partes.push(vivienda.direccion);
+    }
+    
+    // Añadir municipio
+    if (vivienda.municipio) {
+      if (typeof vivienda.municipio === 'string') {
+        partes.push(vivienda.municipio);
+      } else if (vivienda.municipio.nombre) {
+        partes.push(vivienda.municipio.nombre);
+      }
+    }
+    
+    // Añadir provincia si no está incluida en municipio
+    if (vivienda.provincia && typeof vivienda.provincia === 'string') {
+      partes.push(vivienda.provincia);
+    } else if (vivienda.provincia?.nombre) {
+      partes.push(vivienda.provincia.nombre);
+    }
+    
+    return partes.length > 0 ? partes.join(', ') : 'Ubicación no disponible';
+  }
+
+  // Método para verificar si está disponible
+  esDisponible(vivienda: any): boolean {
+    // Si tiene una propiedad disponible explícita, usarla
+    if (vivienda.hasOwnProperty('disponible')) {
+      return vivienda.disponible;
+    }
+    
+    // Si no, calcular basándose en residentes vs habitaciones
+    const residentes = vivienda.residentes || [];
+    const habitaciones = vivienda.numeroHabitaciones || vivienda.habitaciones || 0;
+    
+    return residentes.length < habitaciones;
+  }
+
+  // Método para verificar si está parcialmente ocupada
+  esParcialmenteOcupada(vivienda: any): boolean {
+    const residentes = vivienda.residentes || [];
+    const habitaciones = vivienda.numeroHabitaciones || vivienda.habitaciones || 0;
+    
+    return residentes.length > 0 && residentes.length < habitaciones;
+  }
+
+  // Método para obtener el texto del estado
+  getEstadoTexto(vivienda: any): string {
+    const residentes = vivienda.residentes || [];
+    const habitaciones = vivienda.numeroHabitaciones || vivienda.habitaciones || 0;
+    
+    if (residentes.length === 0) {
+      return 'Disponible';
+    } else if (residentes.length < habitaciones) {
+      return 'Parcialmente ocupada';
+    } else {
+      return 'Completa';
+    }
+  }
+
+  // Método para obtener el icono del estado
+  getEstadoIcon(vivienda: any): string {
+    const residentes = vivienda.residentes || [];
+    const habitaciones = vivienda.numeroHabitaciones || vivienda.habitaciones || 0;
+    
+    if (residentes.length === 0) {
+      return 'bi bi-check-circle';
+    } else if (residentes.length < habitaciones) {
+      return 'bi bi-exclamation-circle';
+    } else {
+      return 'bi bi-x-circle';
+    }
   }
 }

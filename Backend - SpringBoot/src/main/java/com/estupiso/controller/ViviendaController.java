@@ -1,7 +1,7 @@
 package com.estupiso.controller;
 
 import com.estupiso.dto.ViviendaDto;
-import com.estupiso.model.Anunciante;
+import com.estupiso.model.TiposVivienda;
 import com.estupiso.model.Vivienda;
 import com.estupiso.service.ViviendaService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -81,7 +81,7 @@ public class ViviendaController {
             @RequestParam(required = false) String provincia,
             @RequestParam(required = false) String municipio,
             @RequestParam(required = false) String nombre,
-            @RequestParam(required = false) String tipoVivienda,
+            @RequestParam(required = false) TiposVivienda tipoVivienda,
             @RequestParam(required = false) Double precioMin,
             @RequestParam(required = false) Double precioMax,
             @RequestParam(required = false) Integer habitaciones,

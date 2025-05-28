@@ -74,23 +74,26 @@ public class ViviendaController {
             return ResponseEntity.ok(vivienda);
         }
         return ResponseEntity.notFound().build();
-    }
-
-    @GetMapping("/buscar")
+    }    @GetMapping("/buscar")
     @Operation(summary = "Buscar viviendas con filtros")
     public ResponseEntity<Page<Vivienda>> buscarViviendas(
             @RequestParam(required = false) String comunidad,
             @RequestParam(required = false) String provincia,
             @RequestParam(required = false) String municipio,
             @RequestParam(required = false) String nombre,
+            @RequestParam(required = false) String tipoVivienda,
+            @RequestParam(required = false) Double precioMin,
+            @RequestParam(required = false) Double precioMax,
+            @RequestParam(required = false) Integer habitaciones,
             @RequestParam(defaultValue = "false") boolean soloDisponibles,
             @RequestParam(required = false) String direccion,
             @RequestParam(defaultValue = "0") int pagina,
-            @RequestParam(defaultValue = "10") int tamañoPagina) {
+            @RequestParam(defaultValue = "10") int tamanoPagina) {
         
         Page<Vivienda> resultados = viviendaService.buscarViviendas(
-                comunidad, provincia, municipio, nombre, 
-                soloDisponibles, direccion, pagina, tamañoPagina);
+                comunidad, provincia, municipio, nombre, tipoVivienda,
+                precioMin, precioMax, habitaciones, soloDisponibles, 
+                direccion, pagina, tamanoPagina);
         return ResponseEntity.ok(resultados);
     }
 

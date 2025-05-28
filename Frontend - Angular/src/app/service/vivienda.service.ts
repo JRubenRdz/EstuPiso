@@ -1,6 +1,6 @@
 import { HttpClient } from '@angular/common/http';
 import { Injectable } from '@angular/core';
-import { environment } from '../../environments/environment.development';
+import { environment } from '../../environments/active.environment';
 import { Observable } from 'rxjs';
 
 @Injectable({
@@ -30,27 +30,33 @@ export class ViviendaService {
 
   getViviendaById(id: number): Observable<any> {
     return this.http.get<any>(`${this.urlApi}/${id}`);
-  }
-
-  buscarViviendas(
+  }  buscarViviendas(
     comunidad?: string,
     provincia?: string,
     municipio?: string,
     nombre?: string,
+    tipoVivienda?: string,
+    precioMin?: number,
+    precioMax?: number,
+    habitaciones?: number,
     soloDisponibles: boolean = false,
     direccion?: string,
     pagina: number = 0,
-    tamañoPagina: number = 10
+    tamanoPagina: number = 10
   ): Observable<any> {
     const params: any = {
       soloDisponibles,
       pagina,
-      tamañoPagina
+      tamanoPagina
     };
     if (comunidad) params.comunidad = comunidad;
     if (provincia) params.provincia = provincia;
     if (municipio) params.municipio = municipio;
     if (nombre) params.nombre = nombre;
+    if (tipoVivienda) params.tipoVivienda = tipoVivienda;
+    if (precioMin !== undefined && precioMin !== null) params.precioMin = precioMin;
+    if (precioMax !== undefined && precioMax !== null) params.precioMax = precioMax;
+    if (habitaciones !== undefined && habitaciones !== null) params.habitaciones = habitaciones;
     if (direccion) params.direccion = direccion;
 
     return this.http.get<any>(`${this.urlApi}/buscar`, { params });

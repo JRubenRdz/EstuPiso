@@ -28,16 +28,10 @@ public class MunicipioService {
         return municipioRepository.findById(id);
     }
 
-    public Optional<Municipio> findByNombre(String nombre) {
-        return municipioRepository.findByNombre(nombre);
-    }
-
-    public List<Municipio> findByProvincia(Provincia provincia) {
-        return municipioRepository.findByProvincia(provincia);
-    }
-
     public List<MunicipioDto> findByProvinciaId(Integer provinciaId) {
+
         Optional<Provincia> provincia = provinciaService.findById(provinciaId);
+        
         if (provincia.isPresent()) {
             List<Municipio> municipios = municipioRepository.findByProvincia(provincia.get());
             return municipios.stream()
@@ -45,6 +39,7 @@ public class MunicipioService {
                     .collect(Collectors.toList());
         }
         return List.of();
+
     }
 
     private MunicipioDto convertToDto(Municipio municipio) {

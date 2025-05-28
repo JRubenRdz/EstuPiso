@@ -23,16 +23,51 @@ public class ViviendaSpecification {
     public static Specification<Vivienda> conMunicipio(String municipio) {
         return (root, query, cb) ->
                 municipio == null ? null : cb.equal(root.get("municipio"), municipio);
+    }    public static Specification<Vivienda> disponible() {
+        return (root, query, cb) -> {
+            try {
+                // Convertir numeroHabitaciones de String a Integer para la comparación
+                return cb.greaterThan(
+                    cb.function("CAST", Integer.class, root.get("numeroHabitaciones"), cb.literal("INTEGER")),
+                    cb.size(root.get("residentes"))
+                );
+            } catch (Exception e) {
+                // Fallback: asumir que si hay residentes es menor que habitaciones
+                return cb.isNotEmpty(root.get("residentes"));
+            }
+        };
+    }public static Specification<Vivienda> conDireccion(String direccion) {
+        return (root, query, cb) ->
+                direccion == null ? null : cb.like(cb.lower(root.get("calle")), "%" + direccion.toLowerCase() + "%");
     }
 
-    public static Specification<Vivienda> disponible() {
+    public static Specification<Vivienda> conTipoVivienda(String tipoVivienda) {
         return (root, query, cb) ->
-                cb.greaterThan(root.get("numeroHabitaciones"), cb.size(root.get("residentes")));
+                tipoVivienda == null ? null : cb.equal(root.get("tipoVivienda"), tipoVivienda);
     }
 
-    public static Specification<Vivienda> conDireccion(String direccion) {
+    public static Specification<Vivienda> conPrecioMinimo(Double precioMin) {
         return (root, query, cb) ->
-                direccion == null ? null : cb.equal(root.get("direccion"), direccion);
+                precioMin == null ? null : cb.greaterThanOrEqualTo(root.get("precioMensual"), precioMin);
+    }
+
+    public static Specification<Vivienda> conPrecioMaximo(Double precioMax) {
+        return (root, query, cb) ->
+                precioMax == null ? null : cb.lessThanOrEqualTo(root.get("precioMensual"), precioMax);
+    }    public static Specification<Vivienda> conHabitacionesMinimas(Integer habitaciones) {
+        return (root, query, cb) -> {
+            if (habitaciones == null) return null;
+            try {
+                // Convertir String a Integer para la comparación
+                return cb.greaterThanOrEqualTo(
+                    cb.function("CAST", Integer.class, root.get("numeroHabitaciones"), cb.literal("INTEGER")), 
+                    habitaciones
+                );
+            } catch (Exception e) {
+                // Si hay error en la conversión, usar comparación de string
+                return cb.greaterThanOrEqualTo(root.get("numeroHabitaciones"), habitaciones.toString());
+            }
+        };
     }
 
 }

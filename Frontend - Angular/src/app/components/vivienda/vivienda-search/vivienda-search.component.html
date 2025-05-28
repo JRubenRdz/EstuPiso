@@ -1,0 +1,316 @@
+<div class="search-container">
+  <div class="search-header">
+    <h3><i class="bi bi-search"></i> Buscar Viviendas</h3>
+  </div>
+
+  <form (ngSubmit)="onSearch()" class="search-form">
+    
+    <!-- Ubicación -->
+    <div class="filter-section">
+      <h5><i class="bi bi-geo-alt"></i> Ubicación</h5>
+      <div class="row g-2">
+        
+        <!-- Comunidad -->
+        <div class="col-md-4">
+          <select 
+            [(ngModel)]="filters.comunidad" 
+            name="comunidad"
+            (change)="onComunidadChange()"
+            class="form-select form-select-sm">
+            <option value="">Comunidad</option>
+            <option *ngFor="let comunidad of comunidades" [value]="comunidad.nombre">
+              {{ comunidad.nombre }}
+            </option>
+          </select>
+        </div>
+
+        <!-- Provincia -->
+        <div class="col-md-4">
+          <select 
+            [(ngModel)]="filters.provincia" 
+            name="provincia"
+            (change)="onProvinciaChange()"
+            [disabled]="!filters.comunidad || loadingProvincias"
+            class="form-select form-select-sm">
+            <option value="">Provincia</option>
+            <option *ngFor="let provincia of provincias" [value]="provincia.nombre">
+              {{ provincia.nombre }}
+            </option>
+          </select>
+          <small *ngIf="loadingProvincias" class="text-muted">Cargando...</small>
+        </div>
+
+        <!-- Municipio -->
+        <div class="col-md-4">
+          <select            [(ngModel)]="filters.municipio" 
+            name="municipio"
+            (change)="onMunicipioChange()"
+            [disabled]="!filters.provincia || loadingMunicipios"
+            class="form-select form-select-sm">
+            <option value="">Municipio</option>
+            <option *ngFor="let municipio of municipios" [value]="municipio.nombre">
+              {{ municipio.nombre }}
+            </option>
+          </select>
+          <small *ngIf="loadingMunicipios" class="text-muted">Cargando...</small>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Características -->
+    <div class="filter-section">
+      <h5><i class="bi bi-house"></i> Características</h5>
+      <div class="row g-2">
+
+        <!-- Tipo de vivienda -->
+        <div class="col-md-3">
+          <select 
+            [(ngModel)]="filters.tipoVivienda" 
+            name="tipo"
+            (change)="onFilterChange()"
+            class="form-select form-select-sm">
+            <option value="">Tipo</option>
+            <option *ngFor="let tipo of tiposVivienda" [value]="tipo">{{ tipo }}</option>
+          </select>
+        </div>
+
+        <!-- Habitaciones -->
+        <div class="col-md-3">
+          <select 
+            [(ngModel)]="filters.habitaciones" 
+            name="habitaciones"
+            (change)="onFilterChange()"
+            class="form-select form-select-sm">
+            <option value="">Habitaciones</option>
+            <option value="1">1+</option>
+            <option value="2">2+</option>
+            <option value="3">3+</option>
+            <option value="4">4+</option>
+          </select>
+        </div>
+
+        <!-- Precio mínimo -->
+        <div class="col-md-3">
+          <input
+            type="number"
+            [(ngModel)]="filters.precioMin"
+            name="precioMin"
+            (input)="onFilterChange()"
+            placeholder="Precio mín."
+            class="form-control form-control-sm">
+        </div>
+
+        <!-- Precio máximo -->
+        <div class="col-md-3">
+          <input
+            type="number"
+            [(ngModel)]="filters.precioMax"
+            name="precioMax"
+            (input)="onFilterChange()"
+            placeholder="Precio máx."            class="form-control form-control-sm">
+        </div>
+
+      </div>
+    </div>
+
+    <!-- Otros filtros -->
+    <div class="filter-section">
+      <h5><i class="bi bi-funnel"></i> Otros</h5>
+      <div class="row g-2">
+        
+        <!-- Nombre/Búsqueda -->
+        <div class="col-md-6">
+          <input
+            type="text"
+            [(ngModel)]="filters.nombre"
+            name="nombre"
+            (input)="onFilterChange()"
+            placeholder="Buscar por nombre..."
+            class="form-control form-control-sm">
+        </div>
+
+        <!-- Dirección -->
+        <div class="col-md-6">
+          <input
+            type="text"
+            [(ngModel)]="filters.direccion"
+            name="direccion"
+            (input)="onFilterChange()"
+            placeholder="Dirección..."
+            class="form-control form-control-sm">
+        </div>
+
+      </div>
+
+      <!-- Solo disponibles -->
+      <div class="mt-2">
+        <div class="form-check">
+          <input
+            type="checkbox"
+            [(ngModel)]="filters.soloDisponibles"
+            name="soloDisponibles"
+            (change)="onFilterChange()"
+            id="disponibles"
+            class="form-check-input">
+          <label for="disponibles" class="form-check-label">
+            <i class="bi bi-check-circle"></i> Solo viviendas disponibles
+          </label>
+        </div>
+      </div>
+    </div>
+
+    <!-- Botones -->
+    <div class="search-actions">
+      <button type="submit" class="btn btn-primary btn-sm">
+        <i class="bi bi-search"></i> Buscar
+      </button>
+      <button type="button" (click)="clearFilters()" class="btn btn-outline-secondary btn-sm">
+        <i class="bi bi-arrow-clockwise"></i> Limpiar
+      </button>
+    </div>
+
+  </form>
+  <!-- Sección de Resultados -->
+  <div class="results-container" *ngIf="hasSearched">
+    
+    <!-- Indicador de carga -->
+    <div *ngIf="isLoading" class="text-center py-4">
+      <div class="spinner-border" role="status">
+        <span class="visually-hidden">Cargando...</span>
+      </div>
+      <p class="mt-2 text-muted">Buscando viviendas...</p>
+    </div>
+
+    <!-- Resultados -->
+    <div *ngIf="!isLoading" class="results-section">
+      
+      <!-- Cabecera de resultados -->
+      <div class="results-header mb-3">
+        <h4 *ngIf="!noResults"><i class="bi bi-list-ul"></i> Resultados de búsqueda</h4>
+        <h4 *ngIf="noResults"><i class="bi bi-exclamation-circle"></i> No se encontraron viviendas</h4>
+        <p *ngIf="!noResults" class="text-muted">
+          Mostrando {{ searchResults.length }} de {{ totalElements }} viviendas encontradas
+        </p>
+        <p *ngIf="noResults" class="text-muted">
+          No se encontraron viviendas que coincidan con los filtros seleccionados.
+        </p>
+      </div>
+
+      <!-- Lista de viviendas -->
+      <div *ngIf="!noResults" class="row g-3">
+        <div *ngFor="let vivienda of searchResults" class="col-md-6 col-lg-4">
+          <div class="card h-100 shadow-sm">
+            
+            <!-- Imagen principal -->
+            <div class="position-relative">
+              <img 
+                [src]="vivienda.fotos && vivienda.fotos.length > 0 ? vivienda.fotos[0].url : '/assets/placeholder-house.jpg'" 
+                [alt]="vivienda.nombre"
+                class="card-img-top"
+                style="height: 200px; object-fit: cover;">
+              <div class="position-absolute top-0 end-0 m-2">
+                <span class="badge bg-primary">{{ formatPrice(vivienda.precio) }}/mes</span>
+              </div>
+            </div>
+
+            <!-- Contenido de la tarjeta -->
+            <div class="card-body d-flex flex-column">
+              <h5 class="card-title">{{ vivienda.nombre }}</h5>
+              <p class="card-text text-muted mb-2">
+                <i class="bi bi-geo-alt"></i> {{ vivienda.direccion }}, {{ vivienda.municipio?.nombre }}
+              </p>
+              
+              <!-- Características -->
+              <div class="mb-2">
+                <small class="text-muted d-flex gap-3 flex-wrap">
+                  <span *ngIf="vivienda.habitaciones">
+                    <i class="bi bi-door-open"></i> {{ vivienda.habitaciones }} hab.
+                  </span>
+                  <span *ngIf="vivienda.banos">
+                    <i class="bi bi-droplet"></i> {{ vivienda.banos }} baños
+                  </span>
+                  <span *ngIf="vivienda.metrosCuadrados">
+                    <i class="bi bi-rulers"></i> {{ vivienda.metrosCuadrados }}m²
+                  </span>
+                </small>
+              </div>
+
+              <!-- Estado -->
+              <div class="mb-3">
+                <span 
+                  class="badge"
+                  [class.bg-success]="vivienda.disponible"
+                  [class.bg-danger]="!vivienda.disponible">
+                  <i [class]="vivienda.disponible ? 'bi bi-check-circle' : 'bi bi-x-circle'"></i>
+                  {{ vivienda.disponible ? 'Disponible' : 'Ocupada' }}
+                </span>
+              </div>
+
+              <!-- Descripción corta -->
+              <p class="card-text flex-grow-1" *ngIf="vivienda.descripcion">
+                <small class="text-muted">
+                  {{ vivienda.descripcion.length > 80 ? 
+                     (vivienda.descripcion | slice:0:80) + '...' : 
+                     vivienda.descripcion }}
+                </small>
+              </p>
+
+              <!-- Acciones -->
+              <div class="d-grid gap-2">
+                <a 
+                  [routerLink]="['/vivienda', vivienda.id]" 
+                  class="btn btn-outline-primary btn-sm">
+                  <i class="bi bi-eye"></i> Ver detalles
+                </a>
+                <button 
+                  *ngIf="vivienda.disponible" 
+                  class="btn btn-primary btn-sm"
+                  (click)="contactar(vivienda)">
+                  <i class="bi bi-telephone"></i> Contactar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Paginación -->
+      <div *ngIf="!noResults && totalPages > 1" class="d-flex justify-content-center mt-4">
+        <nav>
+          <ul class="pagination">
+            
+            <!-- Botón anterior -->
+            <li class="page-item" [class.disabled]="currentPage === 0">
+              <button class="page-link" (click)="previousPage()" [disabled]="currentPage === 0">
+                <i class="bi bi-chevron-left"></i>
+              </button>
+            </li>
+
+            <!-- Números de página -->
+            <li 
+              *ngFor="let page of getPageNumbers()"
+              class="page-item"
+              [class.active]="page === currentPage">
+              <button class="page-link" (click)="goToPage(page)">
+                {{ page + 1 }}
+              </button>
+            </li>
+
+            <!-- Botón siguiente -->
+            <li class="page-item" [class.disabled]="currentPage === totalPages - 1">
+              <button class="page-link" (click)="nextPage()" [disabled]="currentPage === totalPages - 1">
+                <i class="bi bi-chevron-right"></i>
+              </button>
+            </li>
+          </ul>
+        </nav>
+      </div>
+
+      <div *ngIf="!noResults && totalPages > 1" class="text-center text-muted mt-2">
+        <small>Página {{ currentPage + 1 }} de {{ totalPages }}</small>
+      </div>
+
+    </div>
+  </div>
+</div>

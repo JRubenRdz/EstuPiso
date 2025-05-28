@@ -76,11 +76,12 @@ public class SecurityConfiguration {
                 .requestMatchers(HttpMethod.GET, "/vivienda/{id}").permitAll()
                 .requestMatchers(HttpMethod.GET, "/vivienda/buscar").permitAll()
                 .requestMatchers(HttpMethod.GET, "/vivienda/{idVivienda}/residente/{idResidente}").hasAuthority("ANUNCIANTE")
-                .requestMatchers(HttpMethod.DELETE, "/vivienda/{id}").hasAuthority("ANUNCIANTE")
-
-                // SWAGGER
+                .requestMatchers(HttpMethod.DELETE, "/vivienda/{id}").hasAuthority("ANUNCIANTE")                // SWAGGER
                 .requestMatchers("/swagger-ui/**").permitAll()
                 .requestMatchers("/v3/api-docs/**").permitAll()
+
+                // DEMO DATA (temporal)
+                .requestMatchers("/demo/**").permitAll()
 
                 // OTRAS RUTAS
                 .anyRequest().permitAll();

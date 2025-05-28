@@ -8,14 +8,14 @@ import lombok.Setter;
 @Setter
 @Entity
 @Inheritance(strategy = InheritanceType.TABLE_PER_CLASS)
-public abstract class DomainEntity {
-
-    @Id
+public abstract class DomainEntity {    
+	@Id
     @GeneratedValue(strategy = GenerationType.AUTO)
-    private Integer id;
+    private int id;
 
     @Version
-    private Integer version;
+    @Column(columnDefinition = "integer default 0")
+    private int version;
 
     public DomainEntity() {
         super();

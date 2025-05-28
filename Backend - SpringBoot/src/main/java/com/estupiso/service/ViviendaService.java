@@ -92,10 +92,10 @@ public class ViviendaService {
             return vDto;
         }
         return null;
-    }
-
-    public Page<Vivienda> buscarViviendas(String comunidad, String provincia, String municipio,
-                                          String nombre, boolean soloDisponibles, String direccion, int pagina, int tamañoPagina) {
+    }    public Page<Vivienda> buscarViviendas(String comunidad, String provincia, String municipio,
+                                          String nombre, String tipoVivienda, Double precioMin, Double precioMax,
+                                          Integer habitaciones, boolean soloDisponibles, String direccion, 
+                                          int pagina, int tamañoPagina) {
         Specification<Vivienda> spec = Specification.where(null);
         if (comunidad != null) {
             spec = spec.and(ViviendaSpecification.conComunidad(comunidad));
@@ -109,6 +109,10 @@ public class ViviendaService {
         spec = spec
                 .and(soloDisponibles ? ViviendaSpecification.disponible() : null)
                 .and(nombre != null ? ViviendaSpecification.conNombre(nombre) : null)
+                .and(tipoVivienda != null ? ViviendaSpecification.conTipoVivienda(tipoVivienda) : null)
+                .and(precioMin != null ? ViviendaSpecification.conPrecioMinimo(precioMin) : null)
+                .and(precioMax != null ? ViviendaSpecification.conPrecioMaximo(precioMax) : null)
+                .and(habitaciones != null ? ViviendaSpecification.conHabitacionesMinimas(habitaciones) : null)
                 .and(direccion != null ? ViviendaSpecification.conDireccion(direccion) : null);
         Pageable pageable = PageRequest.of(pagina, tamañoPagina);
 

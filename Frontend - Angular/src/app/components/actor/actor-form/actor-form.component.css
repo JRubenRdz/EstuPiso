@@ -39,6 +39,15 @@
   overflow-y: auto;
 }
 
+/* Modal fixes */
+.modal {
+  z-index: 9999 !important;
+}
+
+.modal-backdrop {
+  z-index: 9998 !important;
+}
+
 /* Icono y título */
 .bi-person-circle {
   color: #667eea;

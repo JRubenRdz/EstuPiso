@@ -324,22 +324,31 @@ export class ActorFormComponent implements OnInit {
         });
       }
     }
-  }
+  }  abrirModal(id: string) {
+    setTimeout(() => {
+      const modal = document.getElementById(id);
+      if (modal) {
+        // @ts-ignore
+        const bsModal = new window.bootstrap.Modal(modal, {
+          backdrop: true,
+          keyboard: true
+        });
 
-  abrirModal(id: string) {
-    const modal = document.getElementById(id);
-    if (modal) {
-      // @ts-ignore
-      const bsModal = new window.bootstrap.Modal(modal);
+        if (id === 'modalExito') {
+          // Listener para redirigir cuando se cierre el modal
+          modal.addEventListener('hidden.bs.modal', () => {
+            this.router.navigate(['/']);
+          }, { once: true });
 
-      if (id === 'modalExito') {
-        modal.addEventListener('hidden.bs.modal', () => {
-          this.router.navigate(['/']);
-        }, { once: true });
+          // Auto-cerrar después de 3 segundos
+          setTimeout(() => {
+            bsModal.hide();
+          }, 3000);
+        }
+
+        bsModal.show();
       }
-
-      bsModal.show();
-    }
+    }, 100);
   }
 
   cancelar() {

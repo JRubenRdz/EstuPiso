@@ -69,32 +69,45 @@
         <button *ngIf="!modoEdicion" type="submit" class="btn btn-primary" [disabled]="form.invalid">Finalizar
           registro</button>
       </div>
-    </form>
-
-    <!-- Modal de éxito -->
+    </form>    <!-- Modal de éxito -->
     <div class="modal fade" id="modalExito" tabindex="-1" aria-labelledby="modalExitoLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header bg-success text-white">
-            <h5 class="modal-title" id="modalExitoLabel">¡Éxito!</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+            <h5 class="modal-title" id="modalExitoLabel">
+              <i class="bi bi-check-circle-fill me-2"></i>¡Éxito!
+            </h5>
           </div>
-          <div class="modal-body">
-            {{ mensajeExito }}
+          <div class="modal-body text-center">
+            <p class="mb-3">{{ mensajeExito }}</p>
+            <p class="text-muted small">Serás redirigido automáticamente en unos segundos...</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-success" data-bs-dismiss="modal">
+              <i class="bi bi-house-fill me-1"></i>Ir al inicio
+            </button>
           </div>
         </div>
       </div>
     </div>
+    
     <!-- Modal de error -->
     <div class="modal fade" id="modalError" tabindex="-1" aria-labelledby="modalErrorLabel" aria-hidden="true">
       <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content">
           <div class="modal-header bg-danger text-white">
-            <h5 class="modal-title" id="modalErrorLabel">Error</h5>
+            <h5 class="modal-title" id="modalErrorLabel">
+              <i class="bi bi-exclamation-triangle-fill me-2"></i>Error
+            </h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
           </div>
-          <div class="modal-body">
-            {{ mensajeError }}
+          <div class="modal-body text-center">
+            <p class="mb-0">{{ mensajeError }}</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-danger" data-bs-dismiss="modal">
+              <i class="bi bi-x-circle me-1"></i>Cerrar
+            </button>
           </div>
         </div>
       </div>

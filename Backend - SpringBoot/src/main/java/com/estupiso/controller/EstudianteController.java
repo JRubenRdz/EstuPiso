@@ -1,5 +1,6 @@
 package com.estupiso.controller;
 
+import com.estupiso.dto.EstudianteDto;
 import com.estupiso.model.Estudiante;
 import com.estupiso.service.ActorService;
 import com.estupiso.service.EstudianteService;
@@ -70,8 +71,8 @@ public class EstudianteController {
 
     @GetMapping("/{id}")
     @Operation(summary = "Obtener un estudiante por su id")
-    public ResponseEntity<Estudiante> findById(@PathVariable int id) {
-        Optional<Estudiante> e = estudianteService.findById(id);
+    public ResponseEntity<EstudianteDto> findById(@PathVariable int id) {
+        Optional<EstudianteDto> e = estudianteService.findById(id);
         if (e.isPresent()) {
             return ResponseEntity.ok(e.get());
         } else {

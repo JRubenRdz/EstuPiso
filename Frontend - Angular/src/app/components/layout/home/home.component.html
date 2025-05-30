@@ -90,16 +90,7 @@
           <span class="visually-hidden">Cargando...</span>
         </div>
         <p class="mt-3 text-muted">Cargando últimos anuncios...</p>
-      </div>
-
-      <!-- Error State -->
-      <div *ngIf="error && !isLoading" class="alert alert-danger text-center" role="alert">
-        <i class="bi bi-exclamation-triangle me-2"></i>
-        {{ error }}
-        <button class="btn btn-sm btn-outline-danger ms-3" (click)="loadUltimosAnuncios()">
-          Reintentar
-        </button>
-      </div>
+      </div>      <!-- No error state needed anymore as we use modals -->
 
       <!-- Empty State -->
       <div *ngIf="!isLoading && !error && ultimosAnuncios.length === 0" class="text-center py-5">

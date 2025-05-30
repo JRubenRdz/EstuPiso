@@ -42,9 +42,7 @@ public class SolicitudViviendaController {
     public ResponseEntity<List<SolicitudViviendaDto>> obtenerSolicitudesAnunciante(@PathVariable Integer anuncianteId) {
         List<SolicitudViviendaDto> solicitudes = solicitudService.obtenerSolicitudesAnunciante(anuncianteId);
         return ResponseEntity.ok(solicitudes);
-    }
-
-    // Aceptar solicitud
+    }    // Aceptar solicitud
     @PutMapping("/{solicitudId}/aceptar/{anuncianteId}")
     public ResponseEntity<SolicitudViviendaDto> aceptarSolicitud(
             @PathVariable Integer solicitudId,
@@ -52,8 +50,8 @@ public class SolicitudViviendaController {
             @RequestBody(required = false) Map<String, String> respuesta) {
 
         String mensaje = respuesta != null ? respuesta.get("respuesta") : null;
-        SolicitudViviendaDto solicitud = solicitudService.responderSolicitud(
-                solicitudId, anuncianteId, EstadoSolicitud.ACEPTADA, mensaje);
+        SolicitudViviendaDto solicitud = solicitudService.aceptarSolicitud(
+                solicitudId, anuncianteId, mensaje);
         return ResponseEntity.ok(solicitud);
     }
 

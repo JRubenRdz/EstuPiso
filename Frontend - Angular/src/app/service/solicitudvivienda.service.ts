@@ -65,8 +65,13 @@ export class SolicitudViviendaService {
         })
       );
   }
+  // Aceptar solicitud y añadir estudiante a la vivienda
+  aceptarSolicitudYAñadirEstudiante(solicitudId: number, anuncianteId: number, respuesta?: string): Observable<any> {
+    const body = respuesta ? { respuesta } : {};
+    return this.http.put<any>(`${this.urlApi}/${solicitudId}/aceptar-y-añadir/${anuncianteId}`, body);
+  }
 
-  // Aceptar solicitud
+  // Método simplificado para aceptar solicitud (mantener compatibilidad)
   aceptarSolicitud(solicitudId: number, anuncianteId: number, respuesta?: string): Observable<SolicitudViviendaDto> {
     const body = respuesta ? { respuesta } : {};
     return this.http.put<SolicitudViviendaDto>(`${this.urlApi}/${solicitudId}/aceptar/${anuncianteId}`, body);

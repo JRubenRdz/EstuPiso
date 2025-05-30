@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { jwtDecode } from 'jwt-decode';
 import { SolicitudViviendaService, SolicitudViviendaDto } from '../../../service/solicitudvivienda.service';
+import { ModalService } from '../../../service/modal.service';
 
 @Component({
   selector: 'app-mis-solicitudes',
@@ -16,9 +17,9 @@ export class MisSolicitudesComponent implements OnInit {
   usuarioActual: any = null;
   isLoading = true;
   error: string | null = null;
-
   constructor(
-    private solicitudService: SolicitudViviendaService // CAMBIAR nombre del servicio
+    private solicitudService: SolicitudViviendaService,
+    private modalService: ModalService
   ) {}
 
   ngOnInit(): void {
@@ -77,23 +78,21 @@ export class MisSolicitudesComponent implements OnInit {
       }
     });
   }
-
   // AÑADIR método para cancelar solicitud
   cancelarSolicitud(solicitud: SolicitudViviendaDto): void {
     if (solicitud.estado !== 'PENDIENTE') {
-      alert('Solo se pueden cancelar solicitudes pendientes');
+      this.modalService.showWarning('Solo se pueden cancelar solicitudes pendientes', 'Acción No Permitida');
       return;
     }
 
     if (confirm('¿Estás seguro de que quieres cancelar esta solicitud?')) {
       this.solicitudService.cancelarSolicitud(solicitud.id, this.usuarioActual.id).subscribe({
         next: () => {
-          alert('Solicitud cancelada correctamente');
+          this.modalService.showSuccess('Solicitud cancelada correctamente', 'Solicitud Cancelada');
           this.cargarSolicitudes(); // Recargar la lista
         },
         error: (error) => {
-          console.error('Error al cancelar solicitud:', error);
-          alert('Error al cancelar la solicitud: ' + (error.error?.message || 'Error desconocido'));
+          console.error('Error al cancelar solicitud:', error);          this.modalService.showError('Error al cancelar la solicitud: ' + (error.error?.message || 'Error desconocido'), 'Error al Cancelar');
         }
       });
     }

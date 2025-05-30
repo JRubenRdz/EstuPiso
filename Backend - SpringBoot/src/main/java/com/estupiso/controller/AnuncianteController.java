@@ -12,8 +12,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Optional;
 import java.util.Optional;
 
 @RestController
@@ -43,16 +42,13 @@ public class AnuncianteController {
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("No se pudo crear el anunciante");
             }
         }
-    }
-
-    @PutMapping
+    }    @PutMapping
     @Operation(summary = "Actualizar un anunciante existente")
     @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Anunciante actualizado exitosamente"),
             @ApiResponse(responseCode = "400", description = "Solicitud no válida") })
     public ResponseEntity<String> updateAnunciante(@RequestBody Anunciante anuncianteU) {
         Anunciante update = anuncianteService.updateAnunciante(anuncianteU);
         if (update != null) {
-            Map<String, String> response = new HashMap<>();
             return ResponseEntity.status(HttpStatus.OK).body("Anunciante actualizado exitosamente");
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Anunciante no encontrado");
@@ -80,17 +76,30 @@ public class AnuncianteController {
         } else {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
-    }
-
-    @DeleteMapping
+    }    @DeleteMapping
     @Operation(summary = "Eliminar un anunciante")
-    @ApiResponses(value = { @ApiResponse(responseCode = "200", description = "Anunciante eliminado exitosamente"),
-            @ApiResponse(responseCode = "404", description = "Anunciante no encontrado")})
+    @ApiResponses(value = { 
+        @ApiResponse(responseCode = "200", description = "Anunciante eliminado exitosamente"),
+        @ApiResponse(responseCode = "400", description = "No se puede eliminar: viviendas con residentes"),
+        @ApiResponse(responseCode = "404", description = "Anunciante no encontrado")
+    })
     public ResponseEntity<String> deleteAnunciante() {
-        if (anuncianteService.deleteAnunciante()) {
-            return ResponseEntity.status(HttpStatus.OK).body("Anunciante eliminado exitosamente");
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Anunciante no encontrado");
+        try {
+            if (anuncianteService.deleteAnunciante()) {
+                return ResponseEntity.status(HttpStatus.OK)
+                    .body("Anunciante eliminado exitosamente junto con todas sus viviendas, fotos y solicitudes");
+            } else {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND)
+                    .body("Anunciante no encontrado");
+            }
+        } catch (RuntimeException e) {
+            // Capturar errores de validación (ej: viviendas con residentes)
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST)
+                .body("Error al eliminar anunciante: " + e.getMessage());
+        } catch (Exception e) {
+            // Capturar otros errores inesperados
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                .body("Error interno del servidor al eliminar anunciante");
         }
     }
 

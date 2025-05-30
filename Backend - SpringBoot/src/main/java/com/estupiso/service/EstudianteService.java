@@ -1,5 +1,6 @@
 package com.estupiso.service;
 
+import com.estupiso.dto.EstudianteDto;
 import com.estupiso.model.Estudiante;
 import com.estupiso.model.Roles;
 import com.estupiso.repository.EstudianteRepository;
@@ -62,8 +63,18 @@ public class EstudianteService {
         return estudianteRepository.findAll();
     }
 
-    public Optional<Estudiante> findById(int id) {
-        return estudianteRepository.findById(id);
+    public Optional<EstudianteDto> findById(int id) {
+        EstudianteDto dto = new EstudianteDto();
+        Estudiante estudianteDB = estudianteRepository.findById(id).orElse(null);
+        if (estudianteDB != null) {
+            dto.setId(estudianteDB.getId());
+            dto.setNombre(estudianteDB.getNombre());
+            dto.setUsuario(estudianteDB.getUsuario());
+            dto.setEmail(estudianteDB.getEmail());
+            dto.setFotoPerfil(estudianteDB.getFotoPerfil());
+            dto.setViviendaId(estudianteDB.getVivienda() != null ? estudianteDB.getVivienda().getId() : null);
+        }
+        return Optional.of(dto);
     }
 
     public Optional<Estudiante> findByUsuario(String usuario) {

@@ -62,17 +62,15 @@ public class SolicitudViviendaService {
 
         if (solicitudPendiente.isPresent()) {
             throw new RuntimeException("Ya tienes una solicitud pendiente para esta vivienda");
-        }
-
-        Optional<SolicitudVivienda> solicitudAceptada = solicitudRepository
+        }        Optional<SolicitudVivienda> solicitudAceptada = solicitudRepository
                 .findByEstudianteIdAndViviendaIdAndEstado(estudianteId, dto.getViviendaId(), EstadoSolicitud.ACEPTADA);
 
         if (solicitudAceptada.isPresent()) {
             throw new RuntimeException("Ya tienes una solicitud aceptada para esta vivienda");
         }
 
-        int ocupacionActual = vivienda.getResidentes().size() +
-                solicitudRepository.countByViviendaIdAndEstado(vivienda.getId(), EstadoSolicitud.ACEPTADA);
+        // CORREGIR: Solo usar residentes físicos para el conteo, no duplicar con solicitudes aceptadas
+        int ocupacionActual = vivienda.getResidentes().size();
 
         if (ocupacionActual >= vivienda.getNumeroHabitaciones()) {
             throw new RuntimeException("No hay habitaciones disponibles en esta vivienda");
@@ -92,11 +90,17 @@ public class SolicitudViviendaService {
 
         SolicitudVivienda solicitudGuardada = solicitudRepository.save(solicitud);
         return convertirADto(solicitudGuardada);
-    }
-
-    // Responder solicitud (aceptar/rechazar)
+    }    // Responder solicitud (SOLO para rechazar - usar aceptarSolicitud() para aceptar)
     public SolicitudViviendaDto responderSolicitud(Integer solicitudId, Integer anuncianteId,
                                                    EstadoSolicitud nuevoEstado, String respuesta) {
+        
+        // ADVERTENCIA: Este método NO debe usarse para aceptar solicitudes
+        // porque no incluye la lógica de añadir al estudiante como residente.
+        // Para aceptar solicitudes, usar aceptarSolicitud() en su lugar.
+        if (nuevoEstado == EstadoSolicitud.ACEPTADA) {
+            throw new RuntimeException("Para aceptar solicitudes use el método aceptarSolicitud()");
+        }
+        
         SolicitudVivienda solicitud = solicitudRepository.findById(solicitudId)
                 .orElseThrow(() -> new RuntimeException("Solicitud no encontrada"));
 
@@ -174,14 +178,14 @@ public class SolicitudViviendaService {
         // Esto requeriría una consulta adicional dependiendo de tu modelo de datos
 
         return false;
-    }
-
-    // AÑADIR método para obtener ocupación actual
+    }    // Método para obtener ocupación actual (usar solo residentes físicos)
     public int obtenerOcupacionActual(Integer viviendaId) {
-        List<SolicitudVivienda> solicitudesAceptadas = solicitudRepository
-                .findByViviendaIdAndEstado(viviendaId, EstadoSolicitud.ACEPTADA);
-
-        return solicitudesAceptadas.size();
+        Optional<Vivienda> viviendaOpt = viviendaRepository.findById(viviendaId);
+        if (viviendaOpt.isPresent()) {
+            Vivienda vivienda = viviendaOpt.get();
+            return vivienda.getResidentes() != null ? vivienda.getResidentes().size() : 0;
+        }
+        return 0;
     }
 
     // Convertir a DTO
@@ -217,12 +221,10 @@ public class SolicitudViviendaService {
         // Verificar que la solicitud esté pendiente
         if (solicitud.getEstado() != EstadoSolicitud.PENDIENTE) {
             throw new RuntimeException("La solicitud ya ha sido procesada");
-        }
-
-        // Verificar disponibilidad de habitaciones
+        }        // Verificar disponibilidad de habitaciones
         Vivienda vivienda = solicitud.getVivienda();
-        int ocupacionActual = vivienda.getResidentes().size() +
-                solicitudRepository.countByViviendaIdAndEstado(vivienda.getId(), EstadoSolicitud.ACEPTADA);
+        // CORREGIR: Solo usar residentes físicos para el conteo, no duplicar con solicitudes aceptadas
+        int ocupacionActual = vivienda.getResidentes().size();
 
         if (ocupacionActual >= vivienda.getNumeroHabitaciones()) {
             throw new RuntimeException("No hay habitaciones disponibles");
@@ -262,9 +264,7 @@ public class SolicitudViviendaService {
         }
 
         return convertirADto(solicitudGuardada);
-    }
-
-    // AÑADIR método al servicio:
+    }    // AÑADIR método al servicio:
     @Transactional
     public void eliminarEstudianteDeVivienda(Integer estudianteId, Integer viviendaId, Integer anuncianteId) {
         // Verificar que la vivienda existe
@@ -285,15 +285,7 @@ public class SolicitudViviendaService {
             throw new RuntimeException("El estudiante no pertenece a esta vivienda");
         }
 
-        // 1. Quitar la vivienda del estudiante
-        estudiante.setVivienda(null);
-        estudianteRepository.save(estudiante);
-
-        // 2. Quitar el estudiante de la lista de residentes de la vivienda
-        vivienda.getResidentes().remove(estudiante);
-        viviendaRepository.save(vivienda);
-
-        // 3. Marcar como cancelada cualquier solicitud aceptada que tenga
+        // 1. Primero marcar como cancelada cualquier solicitud aceptada que tenga
         Optional<SolicitudVivienda> solicitudAceptadaOpt = solicitudRepository
                 .findByEstudianteIdAndViviendaIdAndEstado(estudianteId, viviendaId, EstadoSolicitud.ACEPTADA);
 
@@ -305,6 +297,14 @@ public class SolicitudViviendaService {
             solicitudRepository.save(solicitud);
         }
 
-        System.out.println("Estudiante " + estudianteId + " eliminado de la vivienda " + viviendaId + " por el anunciante " + anuncianteId);
+        // 2. Quitar el estudiante de la lista de residentes de la vivienda
+        vivienda.getResidentes().remove(estudiante);
+        
+        // 3. Quitar la vivienda del estudiante (importante: esto DEBE ir después de remover de la lista)
+        estudiante.setVivienda(null);
+        
+        // 4. Guardar ambas entidades por separado
+        viviendaRepository.save(vivienda);
+        estudianteRepository.save(estudiante);
     }
 }

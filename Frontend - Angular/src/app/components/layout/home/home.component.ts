@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
 import { ViviendaService } from '../../../service/vivienda.service';
+import { ModalService } from '../../../service/modal.service';
 import { jwtDecode } from 'jwt-decode';
 
 @Component({
@@ -16,9 +17,9 @@ export class HomeComponent implements OnInit {
   error = '';
   usuarioActual: any = null;
   esUsuarioLogueado = false;
-
   constructor(
     private viviendaService: ViviendaService,
+    private modalService: ModalService,
     private router: Router
   ) {}
 
@@ -54,10 +55,9 @@ export class HomeComponent implements OnInit {
           .sort((a, b) => new Date(b.fechaPublicacion).getTime() - new Date(a.fechaPublicacion).getTime())
           .slice(0, 8);
         this.isLoading = false;
-      },
-      error: (error) => {
+      },      error: (error) => {
         console.error('Error al cargar anuncios:', error);
-        this.error = 'Error al cargar los anuncios';
+        this.modalService.showError('Error al cargar los anuncios. Por favor, recarga la página.', 'Error de Carga');
         this.isLoading = false;
       }
     });

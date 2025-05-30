@@ -57,14 +57,12 @@ public class Vivienda extends DomainEntity {
     private LocalDateTime fechaPublicacion;
 
     @NotNull
-    private LocalDateTime ultimaEdicion;
-
-    @ManyToOne
+    private LocalDateTime ultimaEdicion;    @ManyToOne
     @JoinColumn(name = "anunciante_id")
     @JsonBackReference
     private Anunciante anunciante;
 
-    @OneToMany(mappedBy = "vivienda", cascade = CascadeType.ALL, orphanRemoval = true)
+    @OneToMany(mappedBy = "vivienda", cascade = {CascadeType.PERSIST, CascadeType.MERGE})
     @JsonManagedReference
     private List<Estudiante> residentes = new ArrayList<>();
 

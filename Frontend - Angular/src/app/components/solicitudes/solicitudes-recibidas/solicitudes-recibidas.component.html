@@ -23,20 +23,7 @@
         <span class="visually-hidden">Cargando...</span>
       </div>
       <p class="mt-3 text-muted">Cargando solicitudes...</p>
-    </div>
-
-    <!-- Error State -->
-    <div *ngIf="error && !isLoading" class="row justify-content-center">
-      <div class="col-md-6">
-        <div class="alert alert-danger text-center" role="alert">
-          <i class="bi bi-exclamation-triangle display-4 text-danger mb-3"></i>
-          <h4>{{ error }}</h4>
-          <a routerLink="/login" class="btn btn-outline-danger mt-3" *ngIf="error.includes('iniciar sesión')">
-            <i class="bi bi-box-arrow-in-right me-2"></i>Iniciar Sesión
-          </a>
-        </div>
-      </div>
-    </div>
+    </div>    <!-- No error state needed anymore as we use modals -->
 
     <!-- Solicitudes Content -->
     <div *ngIf="!isLoading && !error">
@@ -152,7 +139,7 @@
                         <i class="bi bi-x-circle me-2"></i>Rechazar
                       </button>
                       <a 
-                        [routerLink]="['/vivienda', solicitud.viviendaId]" 
+                        [routerLink]="['/anuncio', solicitud.viviendaId]" 
                         class="btn btn-outline-primary"
                         title="Ver vivienda">
                         <i class="bi bi-eye"></i>
@@ -224,7 +211,7 @@
                     <!-- Acciones -->
                     <div class="d-flex gap-2 mt-auto">
                       <a 
-                        [routerLink]="['/vivienda', solicitud.viviendaId]" 
+                        [routerLink]="['/anuncio', solicitud.viviendaId]" 
                         class="btn btn-outline-primary btn-sm flex-fill">
                         <i class="bi bi-eye me-1"></i>Ver Vivienda
                       </a>

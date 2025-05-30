@@ -4,6 +4,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { EstudianteService } from '../../../service/estudiante.service';
 import { AnuncianteService } from '../../../service/anunciante.service';
 import { AdminService } from '../../../service/admin.service';
+import { ModalService } from '../../../service/modal.service';
 import { Actor } from '../../../model/Actor';
 import { CommonModule, NgClass } from '@angular/common';
 import { jwtDecode } from 'jwt-decode';
@@ -35,12 +36,12 @@ export class ActorFormComponent implements OnInit {
   @ViewChild('modalError') modalError!: ElementRef;
 
   imgError = false;
-
   constructor(
     private fb: FormBuilder,
     private estudianteService: EstudianteService,
     private anuncianteService: AnuncianteService,
     private adminService: AdminService, // <-- Añade esto
+    private modalService: ModalService,
     private router: Router,
     private route: ActivatedRoute
   ) { }
@@ -82,15 +83,33 @@ export class ActorFormComponent implements OnInit {
           ];
           this.mostrarFormulario = true;
           this.form.get('usuario')?.enable();
-          this.form.get('rol')?.enable();
-        } else {
+          this.form.get('rol')?.enable();        } else {
           this.puedeCrearAdmin = false;
           this.mostrarFormulario = false;
+          this.modalService.showModal({
+            show: true,
+            type: 'error',
+            title: 'Acceso Denegado',
+            message: 'No tienes permisos para acceder a esta página.',
+            showCloseButton: true,
+            onClose: () => {
+              this.router.navigate(['/']);
+            }          });
         }
       } else {
         this.usuarioLogeado = false;
         this.puedeCrearAdmin = false;
         this.mostrarFormulario = false;
+        this.modalService.showModal({
+          show: true,
+          type: 'error',
+          title: 'Acceso Denegado',
+          message: 'Debes iniciar sesión para acceder a esta página.',
+          showCloseButton: true,
+          onClose: () => {
+            this.router.navigate(['/login']);
+          }
+        });
       }
     } else if (currentRoute === 'mis-datos') {
       if (token) {

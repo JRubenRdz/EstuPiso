@@ -18,10 +18,11 @@ public interface SolicitudViviendaRepository extends JpaRepository<SolicitudVivi
 
     // Verificar si ya existe solicitud pendiente
     Optional<SolicitudVivienda> findByEstudianteIdAndViviendaIdAndEstado(
-            Integer estudianteId, Integer viviendaId, EstadoSolicitud estado);
-
-    // Solicitudes por vivienda
+            Integer estudianteId, Integer viviendaId, EstadoSolicitud estado);    // Solicitudes por vivienda
     List<SolicitudVivienda> findByViviendaIdOrderByFechaSolicitudDesc(Integer viviendaId);
+    
+    // Solicitudes por vivienda (sin orden específico) - Para eliminación en cascada
+    List<SolicitudVivienda> findByViviendaId(Integer viviendaId);
 
     List<SolicitudVivienda> findByViviendaIdAndEstado(Integer viviendaId, EstadoSolicitud estado);
 

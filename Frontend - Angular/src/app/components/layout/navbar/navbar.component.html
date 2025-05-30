@@ -22,10 +22,9 @@
           <a class="nav-link" href="/create-user">
             <i class="bi bi-person-plus-fill me-1"></i> Crear usuario
           </a>
-        </li>
-        <!-- ESTUDIANTE -->
+        </li>        <!-- ESTUDIANTE -->
         <li *ngIf="rol === 'ESTUDIANTE'" class="nav-item">
-          <a class="nav-link" routerLink="/mi-vivienda">
+          <a class="nav-link" (click)="irAMiVivienda()" style="cursor: pointer;">
             <i class="bi bi-house-heart-fill me-1"></i> Mi vivienda
           </a>
         </li>

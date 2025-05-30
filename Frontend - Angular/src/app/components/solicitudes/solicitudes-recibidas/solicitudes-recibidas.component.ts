@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { jwtDecode } from 'jwt-decode';
 import { SolicitudViviendaService, SolicitudViviendaDto } from '../../../service/solicitudvivienda.service';
 import { ViviendaService } from '../../../service/vivienda.service';
+import { ModalService } from '../../../service/modal.service';
 
 @Component({
   selector: 'app-solicitudes-recibidas',
@@ -29,10 +30,10 @@ export class SolicitudesRecibidasComponent implements OnInit {
   tipoRespuesta: 'aceptar' | 'rechazar' = 'aceptar';
   mensajeRespuesta = '';
   enviandoRespuesta = false;
-
   constructor(
     private solicitudService: SolicitudViviendaService,
-    private viviendaService: ViviendaService
+    private viviendaService: ViviendaService,
+    private modalService: ModalService
   ) {}
 
   ngOnInit(): void {
@@ -51,8 +52,6 @@ export class SolicitudesRecibidasComponent implements OnInit {
           email: decodedToken.email,
           tipoUsuario: decodedToken.rol
         };
-
-        console.log('Usuario en solicitudes-recibidas:', this.usuarioActual);
 
         if (this.usuarioActual.tipoUsuario !== 'ANUNCIANTE') {
           this.error = 'Solo los anunciantes pueden acceder a esta sección';
@@ -80,11 +79,8 @@ export class SolicitudesRecibidasComponent implements OnInit {
       return;
     }
 
-    console.log('Cargando solicitudes para anunciante ID:', this.usuarioActual.id);
-
     this.solicitudService.obtenerSolicitudesAnunciante(this.usuarioActual.id).subscribe({
       next: (solicitudes) => {
-        console.log('Solicitudes recibidas:', solicitudes);
         
         // ASEGURAR que solicitudes no sea null
         this.solicitudes = solicitudes || [];
@@ -94,14 +90,11 @@ export class SolicitudesRecibidasComponent implements OnInit {
         this.solicitudesRespondidas = this.solicitudes.filter(s => 
           s.estado === 'ACEPTADA' || s.estado === 'RECHAZADA' || s.estado === 'CANCELADA'
         );
-        
-        console.log('Solicitudes pendientes:', this.solicitudesPendientes.length);
-        console.log('Solicitudes respondidas:', this.solicitudesRespondidas.length);
+
         
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error al cargar solicitudes:', error);
         this.error = 'Error al cargar las solicitudes: ' + (error.error?.message || 'Error desconocido');
         
         // ASEGURAR que las propiedades estén inicializadas incluso en caso de error
@@ -159,48 +152,45 @@ export class SolicitudesRecibidasComponent implements OnInit {
     this.solicitudSeleccionada = null;
     this.mensajeRespuesta = '';
     this.enviandoRespuesta = false;
-  }
-
-  enviarRespuesta(): void {
+  }  enviarRespuesta(): void {
     if (!this.solicitudSeleccionada || !this.usuarioActual) return;
 
     this.enviandoRespuesta = true;
-
     const respuesta = this.mensajeRespuesta.trim() || undefined;
 
     if (this.tipoRespuesta === 'aceptar') {
-      this.solicitudService.aceptarSolicitud(this.solicitudSeleccionada.id, this.usuarioActual.id, respuesta).subscribe({
-        next: (solicitudActualizada) => {
-          console.log('Solicitud aceptada:', solicitudActualizada);
+      // Usar solo aceptarSolicitud que ya incluye la lógica de añadir residente
+      this.solicitudService.aceptarSolicitud(this.solicitudSeleccionada.id, this.usuarioActual.id, respuesta).subscribe({        next: (solicitudActualizada) => {
           this.cerrarModalRespuesta();
           this.cargarSolicitudes(); // Recargar la lista
-          this.viviendaService.añadirResidente(this.solicitudSeleccionada?.viviendaId, this.solicitudSeleccionada?.estudianteId).subscribe({
-            next: (residente) => {
-              alert('Solicitud aceptada correctamente');
-            },
-            error: (error) => {
-              alert('Error al añadir residente: ' + (error.error?.message || 'Error desconocido'));
-            }
-          });
+          this.modalService.showSuccess('¡Solicitud aceptada! El estudiante ha sido añadido como residente.', '¡Solicitud Aceptada!');
         },
         error: (error) => {
           console.error('Error al aceptar solicitud:', error);
           this.enviandoRespuesta = false;
-          alert('Error al aceptar la solicitud: ' + (error.error?.message || 'Error desconocido'));
+          
+          let mensaje = 'Error al aceptar la solicitud';
+          if (error.error?.message) {
+            mensaje = error.error.message;
+          } else if (error.status === 400) {
+            mensaje = 'La vivienda ya está completa o no hay habitaciones disponibles';
+          } else if (error.status === 404) {
+            mensaje = 'No se encontró la solicitud';          }
+          
+          this.modalService.showError(mensaje, 'Error al Aceptar Solicitud');
         }
       });
     } else {
+      // Para rechazar, usar el método original
       this.solicitudService.rechazarSolicitud(this.solicitudSeleccionada.id, this.usuarioActual.id, respuesta).subscribe({
         next: (solicitudActualizada) => {
-          console.log('Solicitud rechazada:', solicitudActualizada);
           this.cerrarModalRespuesta();
           this.cargarSolicitudes(); // Recargar la lista
-          alert('Solicitud rechazada correctamente');
+          this.modalService.showSuccess('Solicitud rechazada correctamente', 'Solicitud Rechazada');
         },
         error: (error) => {
-          console.error('Error al rechazar solicitud:', error);
           this.enviandoRespuesta = false;
-          alert('Error al rechazar la solicitud: ' + (error.error?.message || 'Error desconocido'));
+          this.modalService.showError('Error al rechazar la solicitud: ' + (error.error?.message || 'Error desconocido'), 'Error al Rechazar');
         }
       });
     }

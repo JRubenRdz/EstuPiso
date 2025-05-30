@@ -6,5 +6,8 @@ import lombok.Data;
 public class EstudianteDto {
     private Integer id;
     private String nombre;
+    private String usuario;
     private String email;
+    private String fotoPerfil;
+    private int viviendaId;
 }

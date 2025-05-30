@@ -215,10 +215,6 @@ export class ViviendaFormComponent implements OnInit {
   }
 
   populateForm(vivienda: any): void {
-    console.log('=== DEBUG POPULATE FORM ===');
-    console.log('Vivienda recibida:', vivienda);
-    console.log('Fotos de la vivienda:', vivienda.fotos);
-
     // Limpiar el array de fotos primero
     while (this.fotosArray.length) {
       this.fotosArray.removeAt(0);
@@ -227,7 +223,6 @@ export class ViviendaFormComponent implements OnInit {
     // CORREGIR: Manejar diferentes estructuras de fotos
     if (vivienda.fotos && vivienda.fotos.length > 0) {
       vivienda.fotos.forEach((foto: any, index: number) => {
-        console.log(`Procesando foto ${index} para edición:`, foto);
         
         let fotoUrl = '';
         
@@ -239,8 +234,7 @@ export class ViviendaFormComponent implements OnInit {
         } else if (foto.url) {
           fotoUrl = foto.url;
         }
-        
-        console.log(`URL extraída para foto ${index}:`, fotoUrl);
+      
         
         if (fotoUrl) {
           this.fotosArray.push(this.fb.control(fotoUrl, [
@@ -255,8 +249,6 @@ export class ViviendaFormComponent implements OnInit {
     if (this.fotosArray.length === 0) {
       this.fotosArray.push(this.createFotoControl());
     }
-
-    console.log('FormArray de fotos después de poblar:', this.fotosArray.value);
 
     // Primero llenar los datos básicos - ELIMINAR fotos del patchValue
     this.viviendaForm.patchValue({
@@ -310,7 +302,6 @@ export class ViviendaFormComponent implements OnInit {
 
   onSubmit(): void {
     if (this.viviendaForm.invalid) {
-      console.log('Formulario inválido - errores:', this.viviendaForm.errors);
       this.markFormGroupTouched();
       return;
     }
@@ -320,12 +311,6 @@ export class ViviendaFormComponent implements OnInit {
     // OBTENER los valores de forma explícita en lugar de usar formData
     const formValue = this.viviendaForm.value;
     const formDataRaw = this.viviendaForm.getRawValue(); // USAR getRawValue() para obtener TODO
-    
-    console.log('=== DEBUG FORM VALUES ===');
-    console.log('Form.value:', formValue);
-    console.log('Form.getRawValue():', formDataRaw);
-    console.log('FormArray fotos value:', this.fotosArray.value);
-    console.log('FormArray fotos getRawValue:', this.fotosArray.getRawValue());
     
     // Obtener el anunciante actual desde JWT
     const token = localStorage.getItem('token');
@@ -341,18 +326,15 @@ export class ViviendaFormComponent implements OnInit {
     
     // EXTRAER fotos directamente del FormArray
     const fotosRaw = this.fotosArray.getRawValue();
-    console.log('Fotos extraídas del FormArray:', fotosRaw);
     
     const fotosFormatted = fotosRaw
       .filter((url: string) => url && url.trim() && url.length > 0)
       .map((url: string, index: number) => {
-        console.log(`Formateando foto ${index}:`, url);
         return { 
           imagen: url.trim() 
         };
       });
-  
-    console.log('Fotos formateadas para backend:', fotosFormatted);
+
   
     // VERIFICAR que fotosFormatted no esté vacío
     if (fotosFormatted.length === 0) {
@@ -387,19 +369,11 @@ export class ViviendaFormComponent implements OnInit {
       (viviendaPayload as any).id = this.viviendaId;
     }
 
-    // DEBUG FINAL: Verificar payload completo antes de enviarlo
-    console.log('=== PAYLOAD FINAL ANTES DE ENVIAR ===');
-    console.log('Payload completo:', viviendaPayload);
-    console.log('Fotos en payload:', viviendaPayload.fotos);
-    console.log('Longitud array fotos:', viviendaPayload.fotos.length);
-    console.log('JSON.stringify del payload:', JSON.stringify(viviendaPayload, null, 2));
 
     // ENVIAR al backend
     if (this.isEditMode && this.viviendaId) {
-      console.log('Enviando actualización...');
       this.viviendaService.actualizarVivienda(viviendaPayload).subscribe({
         next: (viviendaActualizada) => {
-          console.log('Vivienda actualizada exitosamente:', viviendaActualizada);
           this.modalMessage = 'Vivienda actualizada correctamente';
           this.showSuccessModal = true;
           this.isSubmitting = false;
@@ -412,10 +386,8 @@ export class ViviendaFormComponent implements OnInit {
         }
       });
     } else {
-      console.log('Enviando creación...');
       this.viviendaService.crearVivienda(viviendaPayload).subscribe({
         next: (response) => {
-          console.log('Vivienda creada exitosamente:', response);
           this.modalMessage = 'Vivienda creada correctamente';
           this.showSuccessModal = true;
           this.isSubmitting = false;

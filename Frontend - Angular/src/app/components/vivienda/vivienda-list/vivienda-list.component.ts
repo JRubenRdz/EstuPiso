@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms'; // AÑADIR FormsModule
 import { Router } from '@angular/router';
 import { ViviendaService } from '../../../service/vivienda.service';
+import { ModalService } from '../../../service/modal.service';
 import { jwtDecode } from 'jwt-decode';
 
 @Component({
@@ -28,9 +29,9 @@ export class ViviendaListComponent implements OnInit {
     provincia: '',
     municipio: '' // MANTENER como string simple
   };
-
   constructor(
     private viviendaService: ViviendaService,
+    private modalService: ModalService,
     private router: Router
   ) {}
 
@@ -72,10 +73,9 @@ export class ViviendaListComponent implements OnInit {
         this.viviendas = [...viviendas]; // Copia para mostrar
         this.viviendasFiltradas = [...viviendas];
         this.isLoading = false;
-      },
-      error: (error) => {
+      },      error: (error) => {
         console.error('Error al cargar viviendas:', error);
-        this.error = 'Error al cargar las viviendas';
+        this.modalService.showError('Error al cargar las viviendas. Por favor, intenta de nuevo.', 'Error de Carga');
         this.isLoading = false;
       }
     });

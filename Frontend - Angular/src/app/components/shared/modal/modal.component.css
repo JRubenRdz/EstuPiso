@@ -1,0 +1,73 @@
+/* Estilos para el componente modal */
+
+.modal {
+  z-index: 1055;
+}
+
+.modal-backdrop {
+  z-index: 1050;
+}
+
+/* Animaciones para los iconos */
+.modal-icon i {
+  animation: modalIconPulse 0.6s ease-in-out;
+}
+
+@keyframes modalIconPulse {
+  0% {
+    transform: scale(0.8);
+    opacity: 0;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+/* Estilos específicos por tipo de modal */
+.modal-success .modal-content {
+  border-left: 4px solid #198754;
+}
+
+.modal-error .modal-content {
+  border-left: 4px solid #dc3545;
+}
+
+.modal-warning .modal-content {
+  border-left: 4px solid #ffc107;
+}
+
+.modal-info .modal-content {
+  border-left: 4px solid #0dcaf0;
+}
+
+/* Efectos de entrada */
+.modal.show .modal-dialog {
+  animation: modalSlideIn 0.3s ease-out;
+}
+
+@keyframes modalSlideIn {
+  from {
+    transform: translateY(-50px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+/* Estilos responsivos */
+@media (max-width: 576px) {
+  .modal-dialog {
+    margin: 1rem;
+  }
+  
+  .modal-icon i {
+    font-size: 2rem !important;
+  }
+}

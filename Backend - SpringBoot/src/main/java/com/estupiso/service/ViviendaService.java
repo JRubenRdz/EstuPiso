@@ -14,6 +14,8 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.domain.Specification;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -40,6 +42,9 @@ public class ViviendaService {
 
     @Autowired
     private FotoViviendaService fotoViviendaService;
+
+    @Autowired
+    private ActorService actorService;
 
     public List<Vivienda> findAllViviendasByAnunciante() {
         Anunciante userLogin = (Anunciante) jwtUtils.userLogin();
@@ -88,19 +93,14 @@ public class ViviendaService {
             }
             
             // Mapear residentes - ahora deberían cargarse correctamente
-            System.out.println("=== DEBUG RESIDENTES ===");
-            System.out.println("Vivienda ID: " + vivienda.getId());
-            System.out.println("Residentes cargados: " + (vivienda.getResidentes() != null ? vivienda.getResidentes().size() : "NULL"));
             
             if (vivienda.getResidentes() != null && !vivienda.getResidentes().isEmpty()) {
                 List<EstudianteDto> residentesDto = vivienda.getResidentes().stream()
                         .map(this::convertirEstudianteADto)
                         .collect(Collectors.toList());
                 vDto.setResidentes(residentesDto);
-                System.out.println("Residentes DTO creados: " + residentesDto.size());
             } else {
                 vDto.setResidentes(new ArrayList<>());
-                System.out.println("Lista de residentes vacía o null");
             }
             
             return vDto;
@@ -137,21 +137,20 @@ public class ViviendaService {
 
 @Transactional
 public Vivienda createVivienda(Vivienda vivienda) {
+    
     Anunciante anuncianteLogin = (Anunciante) jwtUtils.userLogin();
+    
     if (anuncianteLogin != null) {
+        
         vivienda.setFechaPublicacion(LocalDateTime.now());
         vivienda.setUltimaEdicion(LocalDateTime.now());
         vivienda.setAnunciante(anuncianteLogin);
-        
-        System.out.println("=== DEBUG CREAR VIVIENDA ===");
-        System.out.println("Fotos recibidas: " + (vivienda.getFotos() != null ? vivienda.getFotos().size() : "NULL"));
-        
+
         // Establecer relación bidireccional para las fotos
         if (vivienda.getFotos() != null && !vivienda.getFotos().isEmpty()) {
             for (FotoVivienda foto : vivienda.getFotos()) {
                 if (foto.getImagen() != null && !foto.getImagen().trim().isEmpty()) {
                     foto.setVivienda(vivienda); // ← CRUCIAL: Establecer la relación
-                    System.out.println("Foto configurada: " + foto.getImagen());
                 }
             }
             
@@ -160,19 +159,21 @@ public Vivienda createVivienda(Vivienda vivienda) {
                 foto.getImagen() == null || foto.getImagen().trim().isEmpty());
         }
         
-        Vivienda viviendaGuardada = viviendaRepository.save(vivienda);
-        System.out.println("Vivienda guardada con " + 
-            (viviendaGuardada.getFotos() != null ? viviendaGuardada.getFotos().size() : 0) + " fotos");
-        
-        return viviendaGuardada;
-    }
+        try {
+            Vivienda viviendaGuardada = viviendaRepository.save(vivienda);
+            
+            return viviendaGuardada;
+        } catch (Exception e) {
+            System.err.println("ERROR al guardar vivienda: " + e.getMessage());
+            e.printStackTrace();
+            throw e;
+        }
+    } 
     return null;
 }
 
 @Transactional
 public Vivienda updateVivienda(Vivienda viviendaU) {
-    System.out.println("=== DEBUG ENTRADA SERVICE ===");
-    System.out.println("Fotos recibidas: " + (viviendaU.getFotos() != null ? viviendaU.getFotos().size() : "NULL"));
     
     Optional<Vivienda> viviendaO = viviendaRepository.findById(viviendaU.getId());
     if (viviendaO.isPresent()) {
@@ -204,15 +205,12 @@ public Vivienda updateVivienda(Vivienda viviendaU) {
                         // CRUCIAL: Establecer la relación bidireccional
                         nuevaFoto.setVivienda(viviendaExistente);
                         viviendaExistente.getFotos().add(nuevaFoto);
-                        
-                        System.out.println("Foto añadida: " + nuevaFoto.getImagen());
+
                     }
                 }
             }
             
             Vivienda viviendaActualizada = viviendaRepository.save(viviendaExistente);
-            System.out.println("Vivienda actualizada con " + 
-                (viviendaActualizada.getFotos() != null ? viviendaActualizada.getFotos().size() : 0) + " fotos");
             
             return viviendaActualizada;
         }
@@ -232,34 +230,24 @@ public Vivienda añadirResidente(int idVivienda, int idResidente) {
             Vivienda vivienda = viviendaO.get();
             Estudiante estudiante = estudianteO.get();
             
-            // DEBUG: Verificar estado inicial
-            System.out.println("=== DEBUG AÑADIR RESIDENTE ===");
-            System.out.println("Vivienda ID: " + vivienda.getId());
-            System.out.println("Estudiante ID: " + estudiante.getId());
-            System.out.println("Estudiante actual vivienda: " + (estudiante.getVivienda() != null ? estudiante.getVivienda().getId() : "NULL"));
-            System.out.println("Residentes actuales en vivienda: " + vivienda.getResidentes().size());
-            
             // Verificar que el anunciante es el propietario de la vivienda
             if (!Objects.equals(vivienda.getAnunciante().getId(), anuncianteLogin.getId())) {
-                System.out.println("ERROR: El usuario no es propietario de la vivienda");
                 return null;
             }
-            
+
             // Verificar que el estudiante no esté ya en esta vivienda
-            if (estudiante.getVivienda() != null && 
+            if (estudiante.getVivienda() != null &&
                 Objects.equals(estudiante.getVivienda().getId(), vivienda.getId())) {
-                System.out.println("WARNING: El estudiante ya está en esta vivienda");
                 return vivienda; // Ya está añadido, devolver vivienda
             }
-            
+
             // Si el estudiante está en otra vivienda, quitarlo primero
             if (estudiante.getVivienda() != null) {
                 Vivienda viviendaAnterior = estudiante.getVivienda();
                 viviendaAnterior.getResidentes().remove(estudiante);
                 viviendaRepository.save(viviendaAnterior);
-                System.out.println("Estudiante removido de vivienda anterior: " + viviendaAnterior.getId());
             }
-            
+
             // Establecer la relación bidireccional correctamente
             estudiante.setVivienda(vivienda);
             if (!vivienda.getResidentes().contains(estudiante)) {
@@ -272,8 +260,6 @@ public Vivienda añadirResidente(int idVivienda, int idResidente) {
             estudianteRepository.save(estudiante);
             Vivienda viviendaGuardada = viviendaRepository.save(vivienda);
             
-            // DEBUG: Verificar estado final
-            System.out.println("Residentes después del guardado: " + viviendaGuardada.getResidentes().size());
             
             return viviendaGuardada;
         }
@@ -304,11 +290,6 @@ public Vivienda añadirResidente(int idVivienda, int idResidente) {
                 .orElseThrow(() -> new RuntimeException("Vivienda no encontrada"));
         
         ViviendaDto dto = convertirADto(vivienda);
-        
-        System.out.println("=== DEBUG BACKEND ===");
-        System.out.println("Vivienda ID: " + vivienda.getId());
-        System.out.println("Anunciante: " + vivienda.getAnunciante());
-        System.out.println("Anunciante ID: " + (vivienda.getAnunciante() != null ? vivienda.getAnunciante().getId() : "NULL"));
         
         return dto;
     }
@@ -357,11 +338,6 @@ public Vivienda añadirResidente(int idVivienda, int idResidente) {
             System.err.println("WARNING: Vivienda " + vivienda.getId() + " no tiene anunciante asignado");
         }
         
-        System.out.println("=== DEBUG RESIDENTES ===");
-        System.out.println("Vivienda ID: " + vivienda.getId());
-        System.out.println("Residentes en entity: " + (vivienda.getResidentes() != null ? vivienda.getResidentes().size() : "NULL"));
-        System.out.println("Residentes en DTO: " + (dto.getResidentes() != null ? dto.getResidentes().size() : "NULL"));
-        
         return dto;
     }
 
@@ -370,8 +346,6 @@ public Vivienda añadirResidente(int idVivienda, int idResidente) {
         dto.setId(estudiante.getId());
         dto.setNombre(estudiante.getNombre());
         dto.setEmail(estudiante.getEmail());
-        
-        System.out.println("Convirtiendo estudiante: " + estudiante.getNombre() + " (ID: " + estudiante.getId() + ")");
         
         return dto;
     }

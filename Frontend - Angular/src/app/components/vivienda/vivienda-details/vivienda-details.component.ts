@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { jwtDecode } from 'jwt-decode';
 import { SolicitudViviendaService, CrearSolicitudDto } from '../../../service/solicitudvivienda.service';
 import { ViviendaService } from '../../../service/vivienda.service';
+import { ModalService } from '../../../service/modal.service';
 import { MapComponent } from '../../map/map.component';
 
 @Component({
@@ -36,12 +37,12 @@ export class ViviendaDetailsComponent implements OnInit {
 
   // AÑADIR: Propiedades para la gestión de estudiantes
   eliminandoEstudiante = false;
-
   constructor(
     private route: ActivatedRoute,
     private router: Router,
     private solicitudService: SolicitudViviendaService,
-    private viviendaService: ViviendaService
+    private viviendaService: ViviendaService,
+    private modalService: ModalService
   ) {}
 
   ngOnInit(): void {
@@ -55,7 +56,6 @@ export class ViviendaDetailsComponent implements OnInit {
         this.isLoading = false;
       }
     });
-
   }
 
   checkUserAuthentication(): void {
@@ -74,9 +74,6 @@ export class ViviendaDetailsComponent implements OnInit {
         this.esEstudiante = this.usuarioActual.tipoUsuario === 'ESTUDIANTE';
         this.esAnunciante = this.usuarioActual.tipoUsuario === 'ANUNCIANTE';
 
-        console.log('Usuario autenticado:', this.usuarioActual);
-        console.log('Es estudiante:', this.esEstudiante);
-
         if (this.esEstudiante && this.viviendaId) {
           this.verificarSolicitudPendiente();
         }
@@ -94,8 +91,6 @@ export class ViviendaDetailsComponent implements OnInit {
       this.esAnunciante = false;
     }
   }
-
-  // CORREGIR cargarVivienda para obtener datos completos:
   cargarVivienda(): void {
     if (!this.viviendaId) {
       this.error = 'ID de vivienda no válido';
@@ -103,17 +98,9 @@ export class ViviendaDetailsComponent implements OnInit {
       return;
     }
 
-    console.log('Cargando vivienda con ID:', this.viviendaId);
-
     
-
     this.viviendaService.getViviendaById(this.viviendaId).subscribe({
       next: (vivienda) => {
-        console.log('=== DEBUG VIVIENDA CARGADA ===');
-        console.log('Vivienda completa:', vivienda);
-        console.log('Anunciante:', vivienda.anunciante);
-        console.log('Anunciante ID:', vivienda.anunciante?.id);
-        console.log('¿Tiene anunciante?:', !!vivienda.anunciante);
         
         this.vivienda = vivienda;
         
@@ -124,7 +111,6 @@ export class ViviendaDetailsComponent implements OnInit {
         this.error = null;
       },
       error: (error) => {
-        console.error('Error al cargar vivienda:', error);
         this.isLoading = false;
         
         if (error.status === 404) {
@@ -137,20 +123,17 @@ export class ViviendaDetailsComponent implements OnInit {
       }
     });
   }
-
   // AÑADIR: Método para obtener ocupación real
   obtenerOcupacionReal(): void {
     if (!this.viviendaId) return;
 
     this.solicitudService.obtenerOcupacionActual(this.viviendaId).subscribe({
       next: (ocupacion) => {
-        console.log('Ocupación actual:', ocupacion);
-        // Añadir la ocupación por solicitudes aceptadas a la vivienda
-        this.vivienda.ocupacionPorSolicitudes = ocupacion;
-        this.vivienda.ocupacionTotal = (this.vivienda.residentes?.length || 0) + ocupacion;
+        // El backend ya devuelve solo residentes físicos, sin doble conteo
+        this.vivienda.ocupacionPorSolicitudes = 0; // Ya no hay solicitudes aceptadas pendientes
+        this.vivienda.ocupacionTotal = ocupacion; // Solo residentes físicos actuales
       },
       error: (error) => {
-        console.error('Error al obtener ocupación:', error);
         this.vivienda.ocupacionPorSolicitudes = 0;
         this.vivienda.ocupacionTotal = this.vivienda.residentes?.length || 0;
       }
@@ -160,15 +143,14 @@ export class ViviendaDetailsComponent implements OnInit {
   volver(): void {
     window.history.back();
   }
-
   mostrarFormularioSolicitud(): void {
     if (!this.usuarioActual || !this.esEstudiante) {
-      alert('Debes estar logueado como estudiante para solicitar una vivienda');
+      this.modalService.showWarning('Debes estar logueado como estudiante para solicitar una vivienda', 'Acceso Requerido');
       return;
     }
     
     if (this.tieneSolicitudPendiente) {
-      alert('Ya tienes una solicitud pendiente para esta vivienda');
+      this.modalService.showInfo('Ya tienes una solicitud pendiente para esta vivienda', 'Solicitud Existente');
       return;
     }
     
@@ -179,12 +161,10 @@ export class ViviendaDetailsComponent implements OnInit {
   cerrarFormularioSolicitud(): void {
     this.mostrandoFormularioSolicitud = false;
     this.mensajeSolicitud = '';
-  }
-
-  // MEJORAR el método enviarSolicitud con mejor manejo de errores:
+  }  // MEJORAR el método enviarSolicitud con mejor manejo de errores:
   enviarSolicitud(): void {
     if (!this.usuarioActual || !this.esEstudiante) {
-      alert('Error: No estás autenticado como estudiante');
+      this.modalService.showError('No estás autenticado como estudiante', 'Error de Autenticación');
       return;
     }
 
@@ -197,9 +177,7 @@ export class ViviendaDetailsComponent implements OnInit {
     } else if (this.vivienda?.anuncianteId) {
       anuncianteId = this.vivienda.anuncianteId;
     } else {
-      console.error('PROBLEMA: No se encontró el ID del anunciante');
-      console.log('Estructura de vivienda:', this.vivienda);
-      alert('Error: No se pudo identificar al propietario de la vivienda. Contacta al administrador.');
+      this.modalService.showError('No se pudo identificar al propietario de la vivienda. Contacta al administrador.', 'Error del Sistema');
       return; // SALIR aquí, no continuar con null
     }
 
@@ -212,21 +190,18 @@ export class ViviendaDetailsComponent implements OnInit {
       mensaje: this.mensajeSolicitud.trim() || undefined
     };
 
-    console.log('Enviando solicitud:', solicitudData);
 
     this.solicitudService.crearSolicitud(this.usuarioActual.id, solicitudData).subscribe({
       next: (response) => {
-        console.log('Solicitud enviada correctamente:', response);
         this.solicitudEnviada = true;
         this.tieneSolicitudPendiente = true;
         this.enviandoSolicitud = false;
         this.cerrarFormularioSolicitud();
-        
-        // Recargar datos para refrescar el estado
+          // Recargar datos para refrescar el estado
         this.verificarSolicitudPendiente();
         this.obtenerOcupacionReal();
         
-        alert('Solicitud enviada correctamente. El anunciante será notificado.');
+        this.modalService.showSuccess('Solicitud enviada correctamente. El anunciante será notificado.', '¡Solicitud Enviada!');
       },
       error: (error) => {
         console.error('Error al enviar solicitud:', error);
@@ -238,12 +213,11 @@ export class ViviendaDetailsComponent implements OnInit {
         } else if (error.status === 401) {
           mensaje = 'No estás autorizado. Inicia sesión nuevamente.';
         } else if (error.status === 409) {
-          mensaje = 'Ya tienes una solicitud pendiente para esta vivienda';
-        } else if (error.status === 400) {
+          mensaje = 'Ya tienes una solicitud pendiente para esta vivienda';        } else if (error.status === 400) {
           mensaje = error.error?.message || 'Datos inválidos en la solicitud';
         }
         
-        alert(mensaje);
+        this.modalService.showError(mensaje, 'Error al Enviar Solicitud');
       }
     });
   }
@@ -252,16 +226,12 @@ export class ViviendaDetailsComponent implements OnInit {
   verificarSolicitudPendiente(): void {
     if (!this.usuarioActual?.id || !this.viviendaId) return;
 
-    console.log('Verificando estado del estudiante:', this.usuarioActual.id, 'para vivienda:', this.viviendaId);
-
     // Verificar solicitud pendiente
     this.solicitudService.verificarSolicitudPendiente(this.usuarioActual.id, this.viviendaId).subscribe({
       next: (tieneSolicitud) => {
         this.tieneSolicitudPendiente = tieneSolicitud;
-        console.log('Tiene solicitud pendiente:', tieneSolicitud);
       },
       error: (error) => {
-        console.error('Error al verificar solicitud pendiente:', error);
         this.tieneSolicitudPendiente = false;
       }
     });
@@ -270,7 +240,6 @@ export class ViviendaDetailsComponent implements OnInit {
     this.solicitudService.verificarPertenenciaVivienda(this.usuarioActual.id, this.viviendaId).subscribe({
       next: (pertenece) => {
         this.perteneceAVivienda = pertenece;
-        console.log('Pertenece a la vivienda:', pertenece);
       },
       error: (error) => {
         console.error('Error al verificar pertenencia:', error);
@@ -278,12 +247,13 @@ export class ViviendaDetailsComponent implements OnInit {
       }
     });
   }
-
   puedeEditar(): boolean {
-    return this.esAnunciante && 
-           this.vivienda && 
-           this.usuarioActual && 
-           this.vivienda.anunciante?.id === this.usuarioActual.id;
+    
+    if (!this.vivienda || !this.usuarioActual) {
+      return false;
+    }
+    
+    return this.vivienda.anuncianteId == this.usuarioActual.id;
   }
 
   editarVivienda(): void {
@@ -353,34 +323,56 @@ export class ViviendaDetailsComponent implements OnInit {
     });
   }
 
-  // AÑADIR: Método para verificar permisos de gestión
   puedeGestionarEstudiantes(): boolean {
-    return this.esAnunciante && 
-           this.vivienda && 
-           this.usuarioActual && 
-           this.vivienda.anunciante?.id === this.usuarioActual.id;
+    
+    if (!this.vivienda || !this.usuarioActual) {
+      return false;
+    }
+    
+    if (this.usuarioActual.id == this.vivienda.anuncianteId || this.usuarioActual.tipoUsuario === 'ANUNCIANTE') {
+      return true;
+    }
+    return false;
   }
-
   // CORREGIR el método eliminarEstudiante (ya está en tu código, solo verificar que esté completo):
   eliminarEstudiante(estudiante: any): void {
+    
     if (!this.puedeGestionarEstudiantes()) {
-      alert('No tienes permisos para eliminar estudiantes');
+      this.modalService.showWarning('No tienes permisos para eliminar estudiantes', 'Acceso Denegado');
       return;
     }
 
     // Verificar que tenemos el ID del anunciante
     if (!this.usuarioActual?.id) {
-      alert('Error: No se pudo identificar al usuario actual');
+      this.modalService.showError('No se pudo identificar al usuario actual', 'Error de Sesión');
       return;
     }
 
-    const confirmar = confirm(
-      `¿Estás seguro de que quieres eliminar a ${estudiante.nombre} de esta vivienda?\n\n` +
-      `Esta acción no se puede deshacer y el estudiante perderá acceso a la vivienda.`
+    // Verificar que tenemos todos los datos necesarios
+    if (!estudiante?.id) {
+      this.modalService.showError('No se pudo identificar al estudiante', 'Error de Datos');
+      return;
+    }
+
+    if (!this.viviendaId) {
+      this.modalService.showError('No se pudo identificar la vivienda', 'Error de Datos');
+      return;
+    }
+
+    
+    this.modalService.showConfirm(
+      `¿Estás seguro de que quieres eliminar a ${estudiante.nombre} de esta vivienda?\n\nEsta acción no se puede deshacer.`,
+      'Confirmar Eliminación',
+      () => {
+        // Callback de confirmación
+        this.eliminarEstudianteConfirmado(estudiante);
+      },
+      () => 
+      'Cancelar',
+      'Eliminar'
     );
-
-    if (!confirmar) return;
-
+  }private eliminarEstudianteConfirmado(estudiante: any): void {
+    
     this.eliminandoEstudiante = true;
 
     // Pasar el ID del anunciante actual
@@ -390,8 +382,8 @@ export class ViviendaDetailsComponent implements OnInit {
       this.usuarioActual.id
     ).subscribe({
       next: (response) => {
-        console.log('Estudiante eliminado:', response);
-        alert('Estudiante eliminado correctamente de la vivienda');
+        
+        this.modalService.showSuccess('Estudiante eliminado correctamente de la vivienda', '¡Estudiante Eliminado!');
         
         // Recargar la vivienda para actualizar la lista de residentes
         this.cargarVivienda();
@@ -400,7 +392,6 @@ export class ViviendaDetailsComponent implements OnInit {
         this.eliminandoEstudiante = false;
       },
       error: (error) => {
-        console.error('Error al eliminar estudiante:', error);
         this.eliminandoEstudiante = false;
         
         let mensaje = 'Error al eliminar el estudiante';
@@ -408,7 +399,7 @@ export class ViviendaDetailsComponent implements OnInit {
           mensaje = error.error.message || error.error;
         }
         
-        alert(mensaje);
+        this.modalService.showError(mensaje, 'Error al Eliminar Estudiante');
       }
     });
   }

@@ -1,15 +1,18 @@
 package com.estupiso.model;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.Iterator;
 import java.util.List;
 
@@ -29,6 +32,7 @@ public class Vivienda extends DomainEntity {
     private String provincia;
 
     @NotBlank
+    @Column(name = "municipio")
     private String municipio;
 
     @NotBlank
@@ -67,6 +71,11 @@ public class Vivienda extends DomainEntity {
     @OneToMany(mappedBy = "vivienda", cascade = CascadeType.ALL, orphanRemoval = true, fetch = FetchType.LAZY)
     private List<FotoVivienda> fotos = new ArrayList<>();
 
+    // Usar JsonIgnore para evitar conflictos
+    @OneToMany(mappedBy = "vivienda", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<SolicitudVivienda> solicitudes = new ArrayList<>();
+
     public void añadirResidente(Estudiante estudiante) {
         if (!residentes.contains(estudiante)) {
             residentes.add(estudiante);
@@ -99,5 +108,4 @@ public class Vivienda extends DomainEntity {
             }
         }
     }
-
 }

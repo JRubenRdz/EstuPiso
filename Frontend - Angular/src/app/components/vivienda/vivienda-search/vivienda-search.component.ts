@@ -8,7 +8,7 @@ import { ViviendaService } from '../../../service/vivienda.service';
 export interface SearchFilters {
   comunidad?: string;
   provincia?: string;
-  municipio?: string;
+  municipio?: string; // MANTENER como string
   nombre?: string;
   tipoVivienda?: string;
   precioMin?: number;
@@ -32,14 +32,14 @@ export class ViviendaSearchComponent implements OnInit {
     soloDisponibles: true
   };
 
-  // Datos para los selectores
+  // Datos para los selectores - ELIMINAR municipios
   comunidades: any[] = [];
   provincias: any[] = [];
-  municipios: any[] = [];
+  // ELIMINAR: municipios: any[] = [];
 
-  // Estados de carga
+  // Estados de carga - ELIMINAR loadingMunicipios
   loadingProvincias = false;
-  loadingMunicipios = false;
+  // ELIMINAR: loadingMunicipios = false;
   isLoading = false;
 
   // Resultados de búsqueda
@@ -70,6 +70,7 @@ export class ViviendaSearchComponent implements OnInit {
     private ubicacionService: UbicacionService,
     private viviendaService: ViviendaService
   ) {}
+
   ngOnInit(): void {
     this.loadComunidades();
   }
@@ -86,10 +87,10 @@ export class ViviendaSearchComponent implements OnInit {
   }
 
   onComunidadChange(): void {
+    // SIMPLIFICAR: Solo resetear provincia y municipio
     this.filters.provincia = undefined;
-    this.filters.municipio = undefined;
+    this.filters.municipio = ''; // CAMBIAR: resetear como string vacío
     this.provincias = [];
-    this.municipios = [];
 
     if (this.filters.comunidad) {
       this.loadingProvincias = true;
@@ -112,31 +113,28 @@ export class ViviendaSearchComponent implements OnInit {
     this.onFilterChange();
   }
 
+  // SIMPLIFICAR onProvinciaChange - ELIMINAR lógica de municipios
   onProvinciaChange(): void {
-    this.filters.municipio = undefined;
-    this.municipios = [];
+    // CAMBIAR: Solo resetear municipio como string
+    this.filters.municipio = '';
 
+    // ELIMINAR toda la lógica de carga de municipios:
+    /*
     if (this.filters.provincia) {
       this.loadingMunicipios = true;
-      // Buscar el ID de la provincia seleccionada
       const provinciaSeleccionada = this.provincias.find(p => p.nombre === this.filters.provincia);
       if (provinciaSeleccionada) {
         this.ubicacionService.getMunicipiosByProvincia(provinciaSeleccionada.id).subscribe({
-          next: (data) => {
-            this.municipios = data;
-            this.loadingMunicipios = false;
-          },
-          error: (error) => {
-            console.error('Error cargando municipios:', error);
-            this.loadingMunicipios = false;
-          }
+          // ... código eliminado
         });
       }
     }
+    */
 
     this.onFilterChange();
   }
 
+  // SIMPLIFICAR onMunicipioChange
   onMunicipioChange(): void {
     this.onFilterChange();
   }
@@ -150,10 +148,8 @@ export class ViviendaSearchComponent implements OnInit {
     this.searchTimeout = setTimeout(() => {
       this.onSearch();
     }, 300);
-
   }
 
-  // AÑADIR método onSearch que falta:
   onSearch(): void {
     this.currentPage = 0; // Resetear a primera página
     this.buscarViviendas();
@@ -167,7 +163,7 @@ export class ViviendaSearchComponent implements OnInit {
     
     this.filters = { soloDisponibles: true };
     this.provincias = [];
-    this.municipios = [];
+    // ELIMINAR: this.municipios = [];
     this.searchResults = [];
     this.hasSearched = false;
     this.noResults = false;
@@ -176,8 +172,6 @@ export class ViviendaSearchComponent implements OnInit {
     this.currentPage = 0;
   }
 
-
-  // AÑADIR método para convertir el enum antes de enviar:
   private convertirTipoVivienda(tipo: string | undefined): string | undefined {
     if (!tipo) return undefined;
     
@@ -201,12 +195,15 @@ export class ViviendaSearchComponent implements OnInit {
     // Convertir tipo de vivienda antes de enviar
     const tipoViviendaConvertido = this.convertirTipoVivienda(this.filters.tipoVivienda);
 
+    // CAMBIAR: municipio ahora se pasa directamente como string
+    const municipioFiltro = this.filters.municipio?.trim() || undefined;
+
     this.viviendaService.buscarViviendas(
       this.filters.comunidad,
       this.filters.provincia,
-      this.filters.municipio,
+      municipioFiltro, // USAR municipio como string
       this.filters.nombre,
-      tipoViviendaConvertido, // USAR EL VALOR CONVERTIDO
+      tipoViviendaConvertido,
       this.filters.precioMin,
       this.filters.precioMax,
       this.filters.habitaciones,
@@ -216,9 +213,6 @@ export class ViviendaSearchComponent implements OnInit {
       this.pageSize
     ).subscribe({
       next: (response) => {
-        console.log('Respuesta completa:', response);
-        console.log('Tipo vivienda enviado:', tipoViviendaConvertido);
-        
         this.searchResults = response.content || [];
         this.totalPages = response.totalPages || 0;
         this.totalElements = response.totalElements || 0;
@@ -227,8 +221,7 @@ export class ViviendaSearchComponent implements OnInit {
         this.isSearching = false;
       },
       error: (error) => {
-        console.error('Error en la búsqueda:', error);
-        console.error('Tipo vivienda que causó error:', tipoViviendaConvertido);
+        console.error('Error en búsqueda:', error);
         this.isLoading = false;
         this.isSearching = false;
         this.noResults = true;
@@ -249,7 +242,8 @@ export class ViviendaSearchComponent implements OnInit {
       this.filters.direccion
     );
   }
-  // Métodos de paginación
+
+  // Métodos de paginación - SIN CAMBIOS
   nextPage(): void {
     if (this.currentPage < this.totalPages - 1) {
       this.currentPage++;
@@ -271,7 +265,6 @@ export class ViviendaSearchComponent implements OnInit {
     }
   }
 
-  // Métodos auxiliares para el template
   getPageNumbers(): number[] {
     const pages: number[] = [];
     const start = Math.max(0, this.currentPage - 2);
@@ -290,22 +283,14 @@ export class ViviendaSearchComponent implements OnInit {
     }).format(price);
   }
 
-  // MEJORAR método getImagenPrincipal:
   getImagenPrincipal(vivienda: any): string {
-    console.log('Datos de vivienda para imagen:', {
-      id: vivienda.id,
-      fotos: vivienda.fotos
-    });
-
     // Verificar estructura de fotos
     if (vivienda.fotos && Array.isArray(vivienda.fotos) && vivienda.fotos.length > 0) {
       const foto = vivienda.fotos[0];
-      console.log('Primera foto:', foto);
       
       if (typeof foto === 'string') {
         return foto;
       }
-      // CORREGIDO: usar 'imagen' en lugar de 'url'
       if (foto.imagen) {
         return foto.imagen;
       }
@@ -333,33 +318,26 @@ export class ViviendaSearchComponent implements OnInit {
   onImageError(event: Event): void {
     const target = event.target as HTMLImageElement;
     if (target && target.src !== 'https://via.placeholder.com/400x200/e9ecef/6c757d?text=Sin+Imagen') {
-      console.log('Error cargando imagen:', target.src);
       target.src = 'https://via.placeholder.com/400x200/e9ecef/6c757d?text=Sin+Imagen';
     }
   }
 
-  // AÑADIR método para verificar si tiene imagen válida:
   tieneImagen(vivienda: any): boolean {
     const imagen = this.getImagenPrincipal(vivienda);
     return imagen !== 'https://via.placeholder.com/400x200/e9ecef/6c757d?text=Sin+Imagen';
   }
 
-  // CORREGIR método contactar:
   contactar(vivienda: any): void {
-    // Usar router en lugar de window.location para mejor navegación
     window.open(`/anuncio/${vivienda.id}`, '_blank');
   }
 
-  // AÑADIR método para limpiar timeout al destruir componente:
   ngOnDestroy(): void {
     if (this.searchTimeout) {
       clearTimeout(this.searchTimeout);
     }
   }
 
-  // Añadir estos métodos al final de la clase:
-
-  // Método para obtener ubicación completa
+  // ACTUALIZAR método de ubicación para manejar municipio como string
   getUbicacionCompleta(vivienda: any): string {
     const partes: string[] = [];
     
@@ -374,16 +352,17 @@ export class ViviendaSearchComponent implements OnInit {
       partes.push(vivienda.direccion);
     }
     
-    // Añadir municipio
+    // CAMBIAR: Municipio ahora es string simple
     if (vivienda.municipio) {
       if (typeof vivienda.municipio === 'string') {
         partes.push(vivienda.municipio);
       } else if (vivienda.municipio.nombre) {
+        // Retrocompatibilidad por si aún llegan objetos
         partes.push(vivienda.municipio.nombre);
       }
     }
     
-    // Añadir provincia si no está incluida en municipio
+    // Añadir provincia
     if (vivienda.provincia && typeof vivienda.provincia === 'string') {
       partes.push(vivienda.provincia);
     } else if (vivienda.provincia?.nombre) {
@@ -393,21 +372,18 @@ export class ViviendaSearchComponent implements OnInit {
     return partes.length > 0 ? partes.join(', ') : 'Ubicación no disponible';
   }
 
-  // Método para verificar si está disponible
+  // Métodos de estado - SIN CAMBIOS
   esDisponible(vivienda: any): boolean {
-    // Si tiene una propiedad disponible explícita, usarla
     if (vivienda.hasOwnProperty('disponible')) {
       return vivienda.disponible;
     }
     
-    // Si no, calcular basándose en residentes vs habitaciones
     const residentes = vivienda.residentes || [];
     const habitaciones = vivienda.numeroHabitaciones || vivienda.habitaciones || 0;
     
     return residentes.length < habitaciones;
   }
 
-  // Método para verificar si está parcialmente ocupada
   esParcialmenteOcupada(vivienda: any): boolean {
     const residentes = vivienda.residentes || [];
     const habitaciones = vivienda.numeroHabitaciones || vivienda.habitaciones || 0;
@@ -415,7 +391,6 @@ export class ViviendaSearchComponent implements OnInit {
     return residentes.length > 0 && residentes.length < habitaciones;
   }
 
-  // Método para obtener el texto del estado
   getEstadoTexto(vivienda: any): string {
     const residentes = vivienda.residentes || [];
     const habitaciones = vivienda.numeroHabitaciones || vivienda.habitaciones || 0;
@@ -429,7 +404,6 @@ export class ViviendaSearchComponent implements OnInit {
     }
   }
 
-  // Método para obtener el icono del estado
   getEstadoIcon(vivienda: any): string {
     const residentes = vivienda.residentes || [];
     const habitaciones = vivienda.numeroHabitaciones || vivienda.habitaciones || 0;

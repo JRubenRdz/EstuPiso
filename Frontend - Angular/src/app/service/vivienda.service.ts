@@ -62,7 +62,7 @@ export class ViviendaService {
     return this.http.get<any>(`${this.urlApi}/buscar`, { params });
   }
 
-  añadirResidente(idVivienda: number, idEstudiante: number): Observable<any> {
+  añadirResidente(idVivienda: any, idEstudiante: any): Observable<any> {
     return this.http.post<any>(`${this.urlApi}/${idVivienda}/residente/${idEstudiante}`, {});
   }
 

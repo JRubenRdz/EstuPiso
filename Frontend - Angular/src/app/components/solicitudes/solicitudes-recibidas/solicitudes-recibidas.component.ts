@@ -2,8 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
 import { FormsModule } from '@angular/forms';
-import { SolicitudViviendaService, SolicitudViviendaDto } from '../../../service/solicitudvivienda.service';
 import { jwtDecode } from 'jwt-decode';
+import { SolicitudViviendaService, SolicitudViviendaDto } from '../../../service/solicitudvivienda.service';
+import { ViviendaService } from '../../../service/vivienda.service';
 
 @Component({
   selector: 'app-solicitudes-recibidas',
@@ -13,11 +14,15 @@ import { jwtDecode } from 'jwt-decode';
   styleUrl: './solicitudes-recibidas.component.css'
 })
 export class SolicitudesRecibidasComponent implements OnInit {
+  // INICIALIZAR las propiedades como arrays vacíos
   solicitudes: SolicitudViviendaDto[] = [];
-  isLoading = true;
-  error = '';
-  usuarioActual: any = null;
+  solicitudesPendientes: SolicitudViviendaDto[] = [];
+  solicitudesRespondidas: SolicitudViviendaDto[] = [];
   
+  usuarioActual: any = null;
+  isLoading = true;
+  error: string | null = null;
+
   // Modal de respuesta
   mostrandoModalRespuesta = false;
   solicitudSeleccionada: SolicitudViviendaDto | null = null;
@@ -27,6 +32,7 @@ export class SolicitudesRecibidasComponent implements OnInit {
 
   constructor(
     private solicitudService: SolicitudViviendaService,
+    private viviendaService: ViviendaService
   ) {}
 
   ngOnInit(): void {
@@ -41,22 +47,25 @@ export class SolicitudesRecibidasComponent implements OnInit {
         
         this.usuarioActual = {
           id: decodedToken.id,
-          user: decodedToken.sub,
+          nombre: decodedToken.sub,
           email: decodedToken.email,
-          rol: decodedToken.rol
+          tipoUsuario: decodedToken.rol
         };
 
-        if (this.usuarioActual.rol === 'ANUNCIANTE') {
-          this.loadSolicitudes();
-        } else {
-          this.error = 'Solo los anunciantes pueden ver solicitudes recibidas';
+        console.log('Usuario en solicitudes-recibidas:', this.usuarioActual);
+
+        if (this.usuarioActual.tipoUsuario !== 'ANUNCIANTE') {
+          this.error = 'Solo los anunciantes pueden acceder a esta sección';
           this.isLoading = false;
+          return;
         }
+
+        this.cargarSolicitudes();
+        
       } catch (error) {
         console.error('Error al decodificar token:', error);
-        this.error = 'Error al verificar la autenticación';
+        this.error = 'Sesión inválida. Por favor, inicia sesión nuevamente.';
         this.isLoading = false;
-        localStorage.removeItem('token');
       }
     } else {
       this.error = 'Debes iniciar sesión para ver las solicitudes';
@@ -64,62 +73,43 @@ export class SolicitudesRecibidasComponent implements OnInit {
     }
   }
 
-  loadSolicitudes(): void {
+  cargarSolicitudes(): void {
+    if (!this.usuarioActual?.id) {
+      this.error = 'No se pudo identificar al usuario';
+      this.isLoading = false;
+      return;
+    }
+
+    console.log('Cargando solicitudes para anunciante ID:', this.usuarioActual.id);
+
     this.solicitudService.obtenerSolicitudesAnunciante(this.usuarioActual.id).subscribe({
       next: (solicitudes) => {
-        this.solicitudes = solicitudes;
+        console.log('Solicitudes recibidas:', solicitudes);
+        
+        // ASEGURAR que solicitudes no sea null
+        this.solicitudes = solicitudes || [];
+        
+        // Separar solicitudes por estado
+        this.solicitudesPendientes = this.solicitudes.filter(s => s.estado === 'PENDIENTE');
+        this.solicitudesRespondidas = this.solicitudes.filter(s => 
+          s.estado === 'ACEPTADA' || s.estado === 'RECHAZADA' || s.estado === 'CANCELADA'
+        );
+        
+        console.log('Solicitudes pendientes:', this.solicitudesPendientes.length);
+        console.log('Solicitudes respondidas:', this.solicitudesRespondidas.length);
+        
         this.isLoading = false;
       },
       error: (error) => {
         console.error('Error al cargar solicitudes:', error);
-        this.error = 'Error al cargar las solicitudes';
+        this.error = 'Error al cargar las solicitudes: ' + (error.error?.message || 'Error desconocido');
+        
+        // ASEGURAR que las propiedades estén inicializadas incluso en caso de error
+        this.solicitudes = [];
+        this.solicitudesPendientes = [];
+        this.solicitudesRespondidas = [];
+        
         this.isLoading = false;
-      }
-    });
-  }
-
-  // Abrir modal para responder
-  abrirModalRespuesta(solicitud: SolicitudViviendaDto, tipo: 'aceptar' | 'rechazar'): void {
-    if (solicitud.estado !== 'PENDIENTE') {
-      alert('Esta solicitud ya ha sido respondida');
-      return;
-    }
-
-    this.solicitudSeleccionada = solicitud;
-    this.tipoRespuesta = tipo;
-    this.mensajeRespuesta = '';
-    this.mostrandoModalRespuesta = true;
-  }
-
-  // Cerrar modal
-  cerrarModalRespuesta(): void {
-    this.mostrandoModalRespuesta = false;
-    this.solicitudSeleccionada = null;
-    this.mensajeRespuesta = '';
-    this.enviandoRespuesta = false;
-  }
-
-  // Enviar respuesta
-  enviarRespuesta(): void {
-    if (!this.solicitudSeleccionada) return;
-
-    this.enviandoRespuesta = true;
-    const respuesta = this.mensajeRespuesta.trim() || undefined;
-
-    const observable = this.tipoRespuesta === 'aceptar' 
-      ? this.solicitudService.aceptarSolicitud(this.solicitudSeleccionada.id, this.usuarioActual.id, respuesta)
-      : this.solicitudService.rechazarSolicitud(this.solicitudSeleccionada.id, this.usuarioActual.id, respuesta);
-
-    observable.subscribe({
-      next: () => {
-        this.loadSolicitudes(); // Recargar lista
-        this.cerrarModalRespuesta();
-        alert(`Solicitud ${this.tipoRespuesta === 'aceptar' ? 'aceptada' : 'rechazada'} correctamente`);
-      },
-      error: (error) => {
-        console.error('Error al responder solicitud:', error);
-        this.enviandoRespuesta = false;
-        alert('Error al responder la solicitud');
       }
     });
   }
@@ -127,10 +117,10 @@ export class SolicitudesRecibidasComponent implements OnInit {
   getEstadoClass(estado: string): string {
     switch (estado) {
       case 'PENDIENTE': return 'bg-warning text-dark';
-      case 'ACEPTADA': return 'bg-success';
-      case 'RECHAZADA': return 'bg-danger';
-      case 'CANCELADA': return 'bg-secondary';
-      default: return 'bg-secondary';
+      case 'ACEPTADA': return 'bg-success text-white';
+      case 'RECHAZADA': return 'bg-danger text-white';
+      case 'CANCELADA': return 'bg-secondary text-white';
+      default: return 'bg-light text-dark';
     }
   }
 
@@ -139,27 +129,80 @@ export class SolicitudesRecibidasComponent implements OnInit {
       case 'PENDIENTE': return 'bi-clock';
       case 'ACEPTADA': return 'bi-check-circle';
       case 'RECHAZADA': return 'bi-x-circle';
-      case 'CANCELADA': return 'bi-dash-circle';
+      case 'CANCELADA': return 'bi-slash-circle';
       default: return 'bi-question-circle';
     }
   }
 
   formatearFecha(fecha: string): string {
-    return new Date(fecha).toLocaleDateString('es-ES', {
+    if (!fecha) return 'Fecha no disponible';
+    
+    const fechaObj = new Date(fecha);
+    return fechaObj.toLocaleDateString('es-ES', {
       year: 'numeric',
-      month: 'long',
+      month: 'short',
       day: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     });
   }
 
-  // Filtrar solicitudes
-  get solicitudesPendientes(): SolicitudViviendaDto[] {
-    return this.solicitudes.filter(s => s.estado === 'PENDIENTE');
+  abrirModalRespuesta(solicitud: SolicitudViviendaDto, tipo: 'aceptar' | 'rechazar'): void {
+    this.solicitudSeleccionada = solicitud;
+    this.tipoRespuesta = tipo;
+    this.mensajeRespuesta = '';
+    this.mostrandoModalRespuesta = true;
   }
 
-  get solicitudesRespondidas(): SolicitudViviendaDto[] {
-    return this.solicitudes.filter(s => s.estado !== 'PENDIENTE');
+  cerrarModalRespuesta(): void {
+    this.mostrandoModalRespuesta = false;
+    this.solicitudSeleccionada = null;
+    this.mensajeRespuesta = '';
+    this.enviandoRespuesta = false;
+  }
+
+  enviarRespuesta(): void {
+    if (!this.solicitudSeleccionada || !this.usuarioActual) return;
+
+    this.enviandoRespuesta = true;
+
+    const respuesta = this.mensajeRespuesta.trim() || undefined;
+
+    if (this.tipoRespuesta === 'aceptar') {
+      this.solicitudService.aceptarSolicitud(this.solicitudSeleccionada.id, this.usuarioActual.id, respuesta).subscribe({
+        next: (solicitudActualizada) => {
+          console.log('Solicitud aceptada:', solicitudActualizada);
+          this.cerrarModalRespuesta();
+          this.cargarSolicitudes(); // Recargar la lista
+          this.viviendaService.añadirResidente(this.solicitudSeleccionada?.viviendaId, this.solicitudSeleccionada?.estudianteId).subscribe({
+            next: (residente) => {
+              alert('Solicitud aceptada correctamente');
+            },
+            error: (error) => {
+              alert('Error al añadir residente: ' + (error.error?.message || 'Error desconocido'));
+            }
+          });
+        },
+        error: (error) => {
+          console.error('Error al aceptar solicitud:', error);
+          this.enviandoRespuesta = false;
+          alert('Error al aceptar la solicitud: ' + (error.error?.message || 'Error desconocido'));
+        }
+      });
+    } else {
+      this.solicitudService.rechazarSolicitud(this.solicitudSeleccionada.id, this.usuarioActual.id, respuesta).subscribe({
+        next: (solicitudActualizada) => {
+          console.log('Solicitud rechazada:', solicitudActualizada);
+          this.cerrarModalRespuesta();
+          this.cargarSolicitudes(); // Recargar la lista
+          alert('Solicitud rechazada correctamente');
+        },
+        error: (error) => {
+          console.error('Error al rechazar solicitud:', error);
+          this.enviandoRespuesta = false;
+          alert('Error al rechazar la solicitud: ' + (error.error?.message || 'Error desconocido'));
+        }
+      });
+    }
   }
 }

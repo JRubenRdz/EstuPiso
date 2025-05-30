@@ -1,10 +1,12 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment.development';
 
 export interface CrearSolicitudDto {
   viviendaId: number;
+  anuncianteId: number; // AÑADIR este campo
   mensaje?: string;
 }
 
@@ -38,6 +40,16 @@ export class SolicitudViviendaService {
     return this.http.post<SolicitudViviendaDto>(`${this.urlApi}/crear/${estudianteId}`, dto);
   }
 
+  // AÑADIR: Verificar si existe solicitud pendiente
+  verificarSolicitudPendiente(estudianteId: number, viviendaId: number): Observable<boolean> {
+    return this.http.get<boolean>(`${this.urlApi}/verificar/${estudianteId}/${viviendaId}`);
+  }
+
+  // AÑADIR: Verificar si el estudiante ya pertenece a la vivienda
+  verificarPertenenciaVivienda(estudianteId: number, viviendaId: number): Observable<boolean> {
+    return this.http.get<boolean>(`${this.urlApi}/pertenece/${estudianteId}/${viviendaId}`);
+  }
+
   // Obtener solicitudes del estudiante
   obtenerSolicitudesEstudiante(estudianteId: number): Observable<SolicitudViviendaDto[]> {
     return this.http.get<SolicitudViviendaDto[]>(`${this.urlApi}/estudiante/${estudianteId}`);
@@ -45,7 +57,13 @@ export class SolicitudViviendaService {
 
   // Obtener solicitudes para el anunciante
   obtenerSolicitudesAnunciante(anuncianteId: number): Observable<SolicitudViviendaDto[]> {
-    return this.http.get<SolicitudViviendaDto[]>(`${this.urlApi}/anunciante/${anuncianteId}`);
+    return this.http.get<SolicitudViviendaDto[]>(`${this.urlApi}/anunciante/${anuncianteId}`)
+      .pipe(
+        catchError(error => {
+          console.error('Error en obtenerSolicitudesAnunciante:', error);
+          return of([]); // Devolver array vacío en caso de error
+        })
+      );
   }
 
   // Aceptar solicitud
@@ -63,5 +81,17 @@ export class SolicitudViviendaService {
   // Cancelar solicitud (estudiante)
   cancelarSolicitud(solicitudId: number, estudianteId: number): Observable<void> {
     return this.http.put<void>(`${this.urlApi}/${solicitudId}/cancelar/${estudianteId}`, {});
+  }
+
+  // AÑADIR: Obtener ocupación actual de una vivienda
+  obtenerOcupacionActual(viviendaId: number): Observable<number> {
+    return this.http.get<number>(`${this.urlApi}/ocupacion/${viviendaId}`);
+  }
+
+  // AÑADIR método en el servicio del frontend:
+  eliminarEstudianteDeVivienda(estudianteId: number, viviendaId: number, anuncianteId: number): Observable<string> {
+    return this.http.delete<string>(`${this.urlApi}/eliminar-estudiante/${estudianteId}/${viviendaId}/${anuncianteId}`, {
+      responseType: 'text' as 'json'
+    });
   }
 }

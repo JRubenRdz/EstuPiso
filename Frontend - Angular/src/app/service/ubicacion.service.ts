@@ -28,8 +28,4 @@ getAllMunicipios(): Observable<any[]> {
   return this.http.get<any[]>(`${this.urlApi}/municipios`);
 }
 
-getMunicipiosByProvincia(provinciaId: number): Observable<any[]> {
-  return this.http.get<any[]>(`${this.urlApi}/municipios/provincia/${provinciaId}`);
-}
-
 }

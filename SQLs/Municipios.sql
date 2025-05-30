@@ -1,4 +1,4 @@
-INSERT INTO public.municipio VALUES
+INSERT INTO public.municipio (cod_municipio, dc, id, provincia_id, nombre) VALUES
 	(1, 4, 1, 1, 'Alegría-Dulantzi'),
 	(1, 9, 2, 2, 'Abengibre'),
 	(1, 5, 3, 3, 'Adsubia'),
@@ -998,8 +998,7 @@ INSERT INTO public.municipio VALUES
 	(21, 3, 997, 35, 'Santa Brígida'),
 	(21, 6, 998, 36, 'Gondomar'),
 	(21, 2, 999, 37, 'Aldeaseca de Alba'),
-	(21, 8, 1000, 38, 'Hermigua');
-INSERT INTO public.municipio VALUES
+	(21, 8, 1000, 38, 'Hermigua'),
 	(21, 1, 1001, 39, 'Cieza'),
 	(21, 5, 1002, 40, 'Arevalillo de Cega'),
 	(21, 2, 1003, 41, 'Camas'),
@@ -1999,8 +1998,7 @@ INSERT INTO public.municipio VALUES
 	(42, 1, 1997, 47, 'Castromembibre'),
 	(42, 7, 1998, 48, 'Gordexola'),
 	(42, 0, 1999, 49, 'Castronuevo'),
-	(42, 3, 2000, 50, 'Balconchán');
-INSERT INTO public.municipio VALUES
+	(42, 3, 2000, 50, 'Balconchán'),
 	(43, 7, 2001, 1, 'Oyón-Oion'),
 	(43, 2, 2002, 2, 'Lezuza'),
 	(43, 8, 2003, 3, 'Biar'),
@@ -3000,8 +2998,7 @@ INSERT INTO public.municipio VALUES
 	(65, 8, 2997, 26, 'Galbárruli'),
 	(65, 4, 2998, 27, 'Vilalba'),
 	(65, 0, 2999, 28, 'Getafe'),
-	(65, 3, 3000, 29, 'Júzcar');
-INSERT INTO public.municipio VALUES
+	(65, 3, 3000, 29, 'Júzcar'),
 	(65, 4, 3001, 31, 'Caparroso'),
 	(65, 9, 3002, 32, 'Punxín'),
 	(65, 5, 3003, 33, 'Sariego'),
@@ -4002,7 +3999,6 @@ INSERT INTO public.municipio VALUES
 	(92, 9, 3998, 49, 'Granucillo'),
 	(92, 2, 3999, 50, 'Chiprana'),
 	(93, 7, 4000, 3, 'Novelda');
-INSERT INTO public.municipio VALUES
 	(93, 2, 4001, 4, 'Turre'),
 	(93, 5, 4002, 5, 'Herradón de Pinares'),
 	(93, 8, 4003, 6, 'Oliva de la Frontera'),
@@ -5002,8 +4998,7 @@ INSERT INTO public.municipio VALUES
 	(130, 2, 4997, 6, 'Tamurejo'),
 	(130, 4, 4998, 8, 'Montclar'),
 	(130, 7, 4999, 9, 'Fresneña'),
-	(130, 1, 5000, 10, 'Navaconcejo');
-INSERT INTO public.municipio VALUES
+	(130, 1, 5000, 10, 'Navaconcejo'),
 	(130, 3, 5001, 12, 'Villahermosa del Río'),
 	(130, 0, 5002, 16, 'Montalbo'),
 	(130, 6, 5003, 17, 'Pera, La'),
@@ -6003,8 +5998,7 @@ INSERT INTO public.municipio VALUES
 	(172, 3, 5997, 16, 'Puebla de Almenara'),
 	(172, 9, 5998, 17, 'Sant Martí de Llémena'),
 	(172, 8, 5999, 19, 'Masegoso de Tajuña'),
-	(172, 4, 6000, 22, 'Peñalba');
-INSERT INTO public.municipio VALUES
+	(172, 4, 6000, 22, 'Peñalba'),
 	(172, 5, 6001, 24, 'Truchas'),
 	(172, 8, 6002, 25, 'Ponts'),
 	(172, 1, 6003, 26, 'Villarejo'),
@@ -7004,8 +6998,7 @@ INSERT INTO public.municipio VALUES
 	(224, 6, 6997, 24, 'Villares de Órbigo'),
 	(224, 9, 6998, 25, 'Torms, Els'),
 	(224, 8, 6999, 31, 'Sesma'),
-	(224, 4, 7000, 34, 'Villamuera de la Cueza');
-INSERT INTO public.municipio VALUES
+	(224, 4, 7000, 34, 'Villamuera de la Cueza'),
 	(224, 6, 7001, 37, 'Orbada, La'),
 	(224, 9, 7002, 40, 'Ventosilla y Tejadilla'),
 	(224, 2, 7003, 44, 'Torre de las Arcas'),
@@ -8005,8 +7998,7 @@ INSERT INTO public.municipio VALUES
 	(902, 3, 7997, 12, 'Sant Joan de Moró'),
 	(902, 9, 7998, 13, 'Ruidera'),
 	(902, 0, 7999, 16, 'Valdetórtola'),
-	(902, 6, 8000, 17, 'Forallac');
-INSERT INTO public.municipio VALUES
+	(902, 6, 8000, 17, 'Forallac'),
 	(902, 2, 8001, 18, 'Valle, El'),
 	(902, 9, 8002, 20, 'Lasarte-Oria'),
 	(902, 1, 8003, 22, 'Puente la Reina de Jaca'),

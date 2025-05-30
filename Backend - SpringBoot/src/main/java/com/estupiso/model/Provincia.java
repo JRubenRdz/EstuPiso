@@ -24,7 +24,4 @@ public class Provincia extends DomainEntity {
     @JoinColumn(name = "comunidad_id", nullable = false)
     private Comunidad comunidad;
 
-    @OneToMany(mappedBy = "provincia", cascade = CascadeType.ALL)
-    private List<Municipio> municipios;
-
 }

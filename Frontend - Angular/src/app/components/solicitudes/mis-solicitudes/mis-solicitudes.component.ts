@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';
-import { SolicitudViviendaService, SolicitudViviendaDto } from '../../../service/solicitudvivienda.service';
 import { jwtDecode } from 'jwt-decode';
+import { SolicitudViviendaService, SolicitudViviendaDto } from '../../../service/solicitudvivienda.service';
 
 @Component({
   selector: 'app-mis-solicitudes',
@@ -12,13 +12,13 @@ import { jwtDecode } from 'jwt-decode';
   styleUrl: './mis-solicitudes.component.css'
 })
 export class MisSolicitudesComponent implements OnInit {
-  solicitudes: SolicitudViviendaDto[] = [];
-  isLoading = true;
-  error = '';
+  solicitudes: SolicitudViviendaDto[] = []; // USAR el tipo correcto
   usuarioActual: any = null;
+  isLoading = true;
+  error: string | null = null;
 
   constructor(
-    private solicitudService: SolicitudViviendaService,
+    private solicitudService: SolicitudViviendaService // CAMBIAR nombre del servicio
   ) {}
 
   ngOnInit(): void {
@@ -35,19 +35,22 @@ export class MisSolicitudesComponent implements OnInit {
           id: decodedToken.id,
           nombre: decodedToken.sub,
           email: decodedToken.email,
-          tipoUsuario: decodedToken.rol 
+          tipoUsuario: decodedToken.rol // USAR 'rol'
         };
 
-        if (this.usuarioActual.rol === 'ESTUDIANTE') {
-          this.loadSolicitudes();
-        } else {
-          this.error = 'Solo los estudiantes pueden ver sus solicitudes';
+        if (this.usuarioActual.tipoUsuario !== 'ESTUDIANTE') {
+          console.error('No es estudiante:', this.usuarioActual.tipoUsuario);
+          this.error = 'Solo los estudiantes pueden acceder a esta sección';
           this.isLoading = false;
+          return;
         }
+
+        this.cargarSolicitudes();
+        
       } catch (error) {
-        this.error = 'Error al verificar la autenticación';
+        console.error('Error al decodificar token:', error);
+        this.error = 'Sesión inválida. Por favor, inicia sesión nuevamente.';
         this.isLoading = false;
-        localStorage.removeItem('token');
       }
     } else {
       this.error = 'Debes iniciar sesión para ver tus solicitudes';
@@ -55,60 +58,59 @@ export class MisSolicitudesComponent implements OnInit {
     }
   }
 
-  loadSolicitudes(): void {
+  cargarSolicitudes(): void {
+    if (!this.usuarioActual?.id) {
+      this.error = 'No se pudo identificar al usuario';
+      this.isLoading = false;
+      return;
+    }
+
+
     this.solicitudService.obtenerSolicitudesEstudiante(this.usuarioActual.id).subscribe({
       next: (solicitudes) => {
-        this.solicitudes = solicitudes;
+        this.solicitudes = solicitudes || [];
         this.isLoading = false;
       },
       error: (error) => {
-        console.error('Error al cargar solicitudes:', error);
-        this.error = 'Error al cargar las solicitudes';
+        this.error = 'Error al cargar las solicitudes: ' + (error.error?.message || 'Error desconocido');
         this.isLoading = false;
       }
     });
   }
 
+  // AÑADIR método para cancelar solicitud
   cancelarSolicitud(solicitud: SolicitudViviendaDto): void {
     if (solicitud.estado !== 'PENDIENTE') {
       alert('Solo se pueden cancelar solicitudes pendientes');
       return;
     }
 
-    if (confirm(`¿Estás seguro de que quieres cancelar tu solicitud para "${solicitud.viviendaTitulo}"?`)) {
+    if (confirm('¿Estás seguro de que quieres cancelar esta solicitud?')) {
       this.solicitudService.cancelarSolicitud(solicitud.id, this.usuarioActual.id).subscribe({
         next: () => {
-          this.loadSolicitudes(); // Recargar lista
           alert('Solicitud cancelada correctamente');
+          this.cargarSolicitudes(); // Recargar la lista
         },
         error: (error) => {
           console.error('Error al cancelar solicitud:', error);
-          alert('Error al cancelar la solicitud');
+          alert('Error al cancelar la solicitud: ' + (error.error?.message || 'Error desconocido'));
         }
       });
     }
   }
 
+  // AÑADIR método para obtener clase CSS del estado
   getEstadoClass(estado: string): string {
     switch (estado) {
-      case 'PENDIENTE': return 'bg-warning text-dark';
-      case 'ACEPTADA': return 'bg-success';
-      case 'RECHAZADA': return 'bg-danger';
-      case 'CANCELADA': return 'bg-secondary';
-      default: return 'bg-secondary';
+      case 'PENDIENTE': return 'badge bg-warning';
+      case 'ACEPTADA': return 'badge bg-success';
+      case 'RECHAZADA': return 'badge bg-danger';
+      case 'CANCELADA': return 'badge bg-secondary';
+      default: return 'badge bg-light';
     }
   }
 
-  getEstadoIcon(estado: string): string {
-    switch (estado) {
-      case 'PENDIENTE': return 'bi-clock';
-      case 'ACEPTADA': return 'bi-check-circle';
-      case 'RECHAZADA': return 'bi-x-circle';
-      case 'CANCELADA': return 'bi-dash-circle';
-      default: return 'bi-question-circle';
-    }
-  }
-
+  // AÑADIR método para formatear fecha
   formatearFecha(fecha: string): string {
     return new Date(fecha).toLocaleDateString('es-ES', {
       year: 'numeric',
@@ -117,5 +119,20 @@ export class MisSolicitudesComponent implements OnInit {
       hour: '2-digit',
       minute: '2-digit'
     });
+  }
+
+  // AÑADIR método getEstadoIcon que falta:
+  getEstadoIcon(estado: string): string {
+    switch (estado) {
+      case 'PENDIENTE': return 'bi bi-clock';
+      case 'ACEPTADA': return 'bi bi-check-circle';
+      case 'RECHAZADA': return 'bi bi-x-circle';
+      case 'CANCELADA': return 'bi bi-slash-circle';
+      default: return 'bi bi-question-circle';
+    }
+  }
+
+  volver(): void {
+    window.history.back();
   }
 }

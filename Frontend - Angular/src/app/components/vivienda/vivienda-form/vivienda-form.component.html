@@ -80,21 +80,17 @@
                   <label for="municipio" class="form-label">
                     Municipio <span class="text-danger">*</span>
                   </label>
-                  <div class="position-relative">
-                    <select 
-                      id="municipio"
-                      class="form-select animate-input"
-                      formControlName="municipio"
-                      [class.is-invalid]="isFieldInvalid('municipio')"
-                      [disabled]="!viviendaForm.get('provincia')?.value || loadingMunicipios">
-                      <option value="">Seleccionar municipio</option>
-                      <option *ngFor="let municipio of municipiosFiltrados" [value]="municipio.nombre">
-                        {{ municipio.nombre }}
-                      </option>
-                    </select>
-                    <div *ngIf="loadingMunicipios" class="loading-overlay">
-                      <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-                    </div>
+                  <input 
+                    type="text"
+                    id="municipio"
+                    class="form-control animate-input"
+                    formControlName="municipio"
+                    placeholder="Escribe el nombre del municipio"
+                    [class.is-invalid]="isFieldInvalid('municipio')"
+                    maxlength="100">
+                  <div class="form-text">
+                    <i class="bi bi-info-circle me-1"></i>
+                    Escribe el nombre completo del municipio
                   </div>
                   <div class="invalid-feedback" *ngIf="isFieldInvalid('municipio')">
                     {{ getFieldError('municipio') }}

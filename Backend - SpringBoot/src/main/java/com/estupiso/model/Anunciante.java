@@ -1,5 +1,6 @@
 package com.estupiso.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
@@ -27,4 +28,8 @@ public class Anunciante extends Actor {
     @JsonManagedReference
     private List<Vivienda> viviendas = new ArrayList<>();
 
+    // Usar JsonIgnore para evitar conflictos
+    @OneToMany(mappedBy = "anunciante", cascade = CascadeType.ALL, orphanRemoval = true)
+    @JsonIgnore
+    private List<SolicitudVivienda> solicitudesRecibidas = new ArrayList<>();
 }

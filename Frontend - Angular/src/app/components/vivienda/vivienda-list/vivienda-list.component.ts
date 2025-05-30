@@ -1,20 +1,33 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms'; // AÑADIR FormsModule
 import { Router } from '@angular/router';
 import { ViviendaService } from '../../../service/vivienda.service';
 import { jwtDecode } from 'jwt-decode';
 
 @Component({
   selector: 'app-vivienda-list',
-  imports: [CommonModule],
+  imports: [CommonModule, FormsModule], // AÑADIR FormsModule
   templateUrl: './vivienda-list.component.html',
   styleUrl: './vivienda-list.component.css'
 })
 export class ViviendaListComponent implements OnInit {
   viviendas: any[] = [];
+  todasLasViviendas: any[] = []; // AÑADIR para mantener copia original
+  viviendasFiltradas: any[] = []; // AÑADIR para filtros
   isLoading = true;
   error = '';
   anuncianteName = '';
+
+  filtros = {
+    tipoVivienda: '',
+    precioMinimo: null as number | null,
+    precioMaximo: null as number | null,
+    numeroHabitaciones: null as number | null,
+    comunidad: '',
+    provincia: '',
+    municipio: '' // MANTENER como string simple
+  };
 
   constructor(
     private viviendaService: ViviendaService,
@@ -55,7 +68,9 @@ export class ViviendaListComponent implements OnInit {
     
     this.viviendaService.getViviendasByAnunciante().subscribe({
       next: (viviendas) => {
-        this.viviendas = viviendas;
+        this.todasLasViviendas = viviendas;
+        this.viviendas = [...viviendas]; // Copia para mostrar
+        this.viviendasFiltradas = [...viviendas];
         this.isLoading = false;
       },
       error: (error) => {
@@ -64,6 +79,65 @@ export class ViviendaListComponent implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  // AÑADIR método aplicarFiltros completo:
+  aplicarFiltros(): void {
+    let viviendasFiltradas = [...this.todasLasViviendas];
+
+    // Filtro por tipo de vivienda
+    if (this.filtros.tipoVivienda) {
+      viviendasFiltradas = viviendasFiltradas.filter(v => 
+        v.tipoVivienda === this.filtros.tipoVivienda
+      );
+    }
+
+    // Filtro por precio mínimo
+    if (this.filtros.precioMinimo !== null && this.filtros.precioMinimo !== undefined) {
+      viviendasFiltradas = viviendasFiltradas.filter(v => 
+        v.precioMensual >= this.filtros.precioMinimo!
+      );
+    }
+
+    // Filtro por precio máximo
+    if (this.filtros.precioMaximo !== null && this.filtros.precioMaximo !== undefined) {
+      viviendasFiltradas = viviendasFiltradas.filter(v => 
+        v.precioMensual <= this.filtros.precioMaximo!
+      );
+    }
+
+    // Filtro por número de habitaciones
+    if (this.filtros.numeroHabitaciones !== null && this.filtros.numeroHabitaciones !== undefined) {
+      viviendasFiltradas = viviendasFiltradas.filter(v => 
+        v.numeroHabitaciones >= this.filtros.numeroHabitaciones!
+      );
+    }
+
+    // Filtro por comunidad
+    if (this.filtros.comunidad) {
+      viviendasFiltradas = viviendasFiltradas.filter(v => 
+        v.comunidad === this.filtros.comunidad
+      );
+    }
+
+    // Filtro por provincia
+    if (this.filtros.provincia) {
+      viviendasFiltradas = viviendasFiltradas.filter(v => 
+        v.provincia === this.filtros.provincia
+      );
+    }
+
+    // CORREGIR: Filtro por municipio (búsqueda por texto)
+    if (this.filtros.municipio && this.filtros.municipio.trim()) {
+      const municipioBusqueda = this.filtros.municipio.trim().toLowerCase();
+      viviendasFiltradas = viviendasFiltradas.filter(v => 
+        v.municipio && v.municipio.toLowerCase().includes(municipioBusqueda)
+      );
+    }
+
+    // Actualizar viviendas mostradas
+    this.viviendas = viviendasFiltradas;
+    this.viviendasFiltradas = viviendasFiltradas;
   }
 
   crearNuevaVivienda(): void {
@@ -82,8 +156,10 @@ export class ViviendaListComponent implements OnInit {
     if (confirm(`¿Estás seguro de que quieres eliminar "${vivienda.nombre}"?`)) {
       this.viviendaService.deleteVivienda(vivienda.id).subscribe({
         next: () => {
+          // Actualizar todas las listas
+          this.todasLasViviendas = this.todasLasViviendas.filter(v => v.id !== vivienda.id);
           this.viviendas = this.viviendas.filter(v => v.id !== vivienda.id);
-          console.log('Vivienda eliminada correctamente');
+          this.viviendasFiltradas = this.viviendasFiltradas.filter(v => v.id !== vivienda.id);
         },
         error: (error) => {
           console.error('Error al eliminar vivienda:', error);
@@ -122,15 +198,44 @@ export class ViviendaListComponent implements OnInit {
     }
   }
 
-  // Método para manejar error de imagen
+  // AÑADIR método para obtener imagen principal:
+  getImagenPrincipal(vivienda: any): string {
+    // Verificar si tiene fotos
+    if (vivienda.fotos && Array.isArray(vivienda.fotos) && vivienda.fotos.length > 0) {
+      const primeraFoto = vivienda.fotos[0];
+    
+      if (primeraFoto.imagen) {
+        return primeraFoto.imagen;
+      }
+    }
+    
+    // Si no hay fotos, usar placeholder
+    return this.getPlaceholderImage();
+  }
+
+  // AÑADIR método para obtener placeholder:
+  getPlaceholderImage(): string {
+    return 'https://via.placeholder.com/400x300/e9ecef/6c757d?text=Sin+Imagen';
+  }
+
+  // CORREGIR método onImageError:
   onImageError(event: Event): void {
     const target = event.target as HTMLImageElement;
     if (target) {
-      target.src = '/assets/placeholder-house.jpg';
+      // Si la imagen actual no es el placeholder, cambiar al placeholder
+      if (target.src !== this.getPlaceholderImage()) {
+        target.src = this.getPlaceholderImage();
+      }
     }
   }
 
-  // Métodos para calcular estadísticas (necesarios para el template)
+  // AÑADIR método para verificar si tiene imagen válida:
+  tieneImagenValida(vivienda: any): boolean {
+    const imagen = this.getImagenPrincipal(vivienda);
+    return imagen !== this.getPlaceholderImage();
+  }
+
+  // Métodos para calcular estadísticas (basados en viviendas filtradas)
   get viviendasDisponibles(): number {
     return this.viviendas.filter(v => this.getEstadoVivienda(v) === 'Disponible').length;
   }

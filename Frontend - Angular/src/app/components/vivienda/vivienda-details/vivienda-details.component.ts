@@ -1,50 +1,63 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute, Router } from '@angular/router';
-import { ViviendaService } from '../../../service/vivienda.service';
-import { jwtDecode } from 'jwt-decode';
-import { MapComponent } from '../../map/map.component';
-import { SolicitudViviendaService } from '../../../service/solicitudvivienda.service';
+import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { FormsModule } from '@angular/forms';
+import { jwtDecode } from 'jwt-decode';
+import { SolicitudViviendaService, CrearSolicitudDto } from '../../../service/solicitudvivienda.service';
+import { ViviendaService } from '../../../service/vivienda.service';
+import { MapComponent } from '../../map/map.component';
 
 @Component({
   selector: 'app-vivienda-details',
-  imports: [CommonModule, MapComponent, FormsModule], // <-- Añadir FormsModule
+  standalone: true,
+  imports: [CommonModule, RouterModule, FormsModule, MapComponent],
   templateUrl: './vivienda-details.component.html',
   styleUrl: './vivienda-details.component.css'
 })
 export class ViviendaDetailsComponent implements OnInit {
   vivienda: any = null;
-  isLoading = true;
-  error = '';
-  viviendaId!: number;
+  viviendaId: number = 0;
   usuarioActual: any = null;
-  esAnunciante = false;
   esEstudiante = false;
-  puedeEditar = false;
-  yaEsResidente = false;
+  esAnunciante = false;
+  isLoading = true;
+  error: string | null = null;
+  nombreAnunciante: string | null = null;
 
-  // Nuevas propiedades para solicitudes
-  tieneSolicitudPendiente = false;
-  solicitudActual: any = null;
+  // Propiedades para solicitudes
   mostrandoFormularioSolicitud = false;
   mensajeSolicitud = '';
   enviandoSolicitud = false;
+  solicitudEnviada = false;
+  tieneSolicitudPendiente = false;
+  
+  // AÑADIR: Nueva propiedad para verificar si pertenece a la vivienda
+  perteneceAVivienda = false;
+
+  // AÑADIR: Propiedades para la gestión de estudiantes
+  eliminandoEstudiante = false;
 
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private viviendaService: ViviendaService,
-    private solicitudService: SolicitudViviendaService
+    private solicitudService: SolicitudViviendaService,
+    private viviendaService: ViviendaService
   ) {}
 
   ngOnInit(): void {
-    this.viviendaId = Number(this.route.snapshot.paramMap.get('id'));
-    this.checkUserAuthentication();
-    this.loadViviendaDetails();
+    this.route.params.subscribe(params => {
+      this.viviendaId = +params['id'];
+      if (this.viviendaId) {
+        this.checkUserAuthentication();
+        this.cargarVivienda();
+      } else {
+        this.error = 'ID de vivienda no válido';
+        this.isLoading = false;
+      }
+    });
+
   }
 
-  // CORREGIDO: Método sin AuthService
   checkUserAuthentication(): void {
     const token = localStorage.getItem('token');
     if (token) {
@@ -53,18 +66,17 @@ export class ViviendaDetailsComponent implements OnInit {
         
         this.usuarioActual = {
           id: decodedToken.id,
-          nombre: decodedToken.sub, 
+          nombre: decodedToken.sub,
           email: decodedToken.email,
-          tipoUsuario: decodedToken.rol 
+          tipoUsuario: decodedToken.rol
         };
 
-        // Establecer roles
         this.esEstudiante = this.usuarioActual.tipoUsuario === 'ESTUDIANTE';
         this.esAnunciante = this.usuarioActual.tipoUsuario === 'ANUNCIANTE';
-        
-        console.log('Usuario autenticado:', this.usuarioActual);
 
-        // Verificar si tiene solicitud pendiente (solo para estudiantes)
+        console.log('Usuario autenticado:', this.usuarioActual);
+        console.log('Es estudiante:', this.esEstudiante);
+
         if (this.esEstudiante && this.viviendaId) {
           this.verificarSolicitudPendiente();
         }
@@ -83,100 +95,80 @@ export class ViviendaDetailsComponent implements OnInit {
     }
   }
 
-  verificarSolicitudPendiente(): void {
-    if (this.usuarioActual && this.esEstudiante) {
-      this.solicitudService.obtenerSolicitudesEstudiante(this.usuarioActual.id).subscribe({
-        next: (solicitudes) => {
-          this.solicitudActual = solicitudes.find(s => 
-            s.viviendaId === this.viviendaId && s.estado === 'PENDIENTE'
-          );
-          this.tieneSolicitudPendiente = !!this.solicitudActual;
-        },
-        error: (error) => {
-          console.error('Error al verificar solicitudes:', error);
-        }
-      });
+  // CORREGIR cargarVivienda para obtener datos completos:
+  cargarVivienda(): void {
+    if (!this.viviendaId) {
+      this.error = 'ID de vivienda no válido';
+      this.isLoading = false;
+      return;
     }
-  }
 
-  loadViviendaDetails(): void {
-    this.isLoading = true;
+    console.log('Cargando vivienda con ID:', this.viviendaId);
+
+    
+
     this.viviendaService.getViviendaById(this.viviendaId).subscribe({
       next: (vivienda) => {
+        console.log('=== DEBUG VIVIENDA CARGADA ===');
+        console.log('Vivienda completa:', vivienda);
+        console.log('Anunciante:', vivienda.anunciante);
+        console.log('Anunciante ID:', vivienda.anunciante?.id);
+        console.log('¿Tiene anunciante?:', !!vivienda.anunciante);
+        
         this.vivienda = vivienda;
-        this.checkPermissions();
+        
+        // AÑADIR: Obtener ocupación real (incluyendo solicitudes aceptadas)
+        this.obtenerOcupacionReal();
+        
         this.isLoading = false;
+        this.error = null;
       },
       error: (error) => {
         console.error('Error al cargar vivienda:', error);
-        this.error = 'No se pudo cargar la información de la vivienda';
         this.isLoading = false;
+        
+        if (error.status === 404) {
+          this.error = 'Vivienda no encontrada';
+        } else if (error.status === 403) {
+          this.error = 'No tienes permisos para ver esta vivienda';
+        } else {
+          this.error = 'Error al cargar la vivienda: ' + (error.error?.message || 'Error desconocido');
+        }
       }
     });
   }
 
-  checkPermissions(): void {
-    if (this.usuarioActual && this.vivienda) {
-      // Verificar si puede editar (es el anunciante propietario)
-      this.puedeEditar = this.esAnunciante && 
-        this.vivienda.anunciante?.id === this.usuarioActual.id;
-      
-      // Verificar si ya es residente
-      this.yaEsResidente = this.esEstudiante && 
-        this.vivienda.residentes?.some((r: any) => r.id === this.usuarioActual.id);
-    }
-  }
+  // AÑADIR: Método para obtener ocupación real
+  obtenerOcupacionReal(): void {
+    if (!this.viviendaId) return;
 
-  editarVivienda(): void {
-    if (this.puedeEditar) {
-      this.router.navigate(['/editar-vivienda', this.viviendaId]);
-    }
+    this.solicitudService.obtenerOcupacionActual(this.viviendaId).subscribe({
+      next: (ocupacion) => {
+        console.log('Ocupación actual:', ocupacion);
+        // Añadir la ocupación por solicitudes aceptadas a la vivienda
+        this.vivienda.ocupacionPorSolicitudes = ocupacion;
+        this.vivienda.ocupacionTotal = (this.vivienda.residentes?.length || 0) + ocupacion;
+      },
+      error: (error) => {
+        console.error('Error al obtener ocupación:', error);
+        this.vivienda.ocupacionPorSolicitudes = 0;
+        this.vivienda.ocupacionTotal = this.vivienda.residentes?.length || 0;
+      }
+    });
   }
 
   volver(): void {
     window.history.back();
   }
 
-  formatearFecha(fecha: string): string {
-    if (!fecha) return 'N/A';
-    return new Date(fecha).toLocaleDateString('es-ES', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric'
-    });
-  }
-
-  getEstadoVivienda(): string {
-    if (!this.vivienda.residentes || this.vivienda.residentes.length === 0) {
-      return 'Disponible';
-    }
-    if (this.vivienda.residentes.length < this.vivienda.numeroHabitaciones) {
-      return 'Parcialmente ocupada';
-    }
-    return 'Completa';
-  }
-
-  getEstadoClass(): string {
-    const estado = this.getEstadoVivienda();
-    switch (estado) {
-      case 'Disponible': return 'text-success';
-      case 'Parcialmente ocupada': return 'text-warning';
-      case 'Completa': return 'text-danger';
-      default: return 'text-secondary';
-    }
-  }
-
-  onImageError(event: Event): void {
-    const target = event.target as HTMLImageElement;
-    if (target) {
-      target.src = '/assets/placeholder-house.jpg';
-    }
-  }
-
-  // NUEVO: Mostrar formulario de solicitud
   mostrarFormularioSolicitud(): void {
     if (!this.usuarioActual || !this.esEstudiante) {
       alert('Debes estar logueado como estudiante para solicitar una vivienda');
+      return;
+    }
+    
+    if (this.tieneSolicitudPendiente) {
+      alert('Ya tienes una solicitud pendiente para esta vivienda');
       return;
     }
     
@@ -184,75 +176,240 @@ export class ViviendaDetailsComponent implements OnInit {
     this.mensajeSolicitud = '';
   }
 
-  // NUEVO: Cancelar formulario
-  cancelarSolicitud(): void {
+  cerrarFormularioSolicitud(): void {
     this.mostrandoFormularioSolicitud = false;
     this.mensajeSolicitud = '';
   }
 
-  // NUEVO: Enviar solicitud
+  // MEJORAR el método enviarSolicitud con mejor manejo de errores:
   enviarSolicitud(): void {
     if (!this.usuarioActual || !this.esEstudiante) {
-      alert('Debes estar logueado como estudiante para solicitar una vivienda');
+      alert('Error: No estás autenticado como estudiante');
       return;
     }
 
+    // VERIFICACIÓN MÁS ROBUSTA - declarar como number, no number | null:
+    let anuncianteId: number;
+    
+    // Intentar obtener el ID del anunciante de diferentes fuentes
+    if (this.vivienda?.anunciante?.id) {
+      anuncianteId = this.vivienda.anunciante.id;
+    } else if (this.vivienda?.anuncianteId) {
+      anuncianteId = this.vivienda.anuncianteId;
+    } else {
+      console.error('PROBLEMA: No se encontró el ID del anunciante');
+      console.log('Estructura de vivienda:', this.vivienda);
+      alert('Error: No se pudo identificar al propietario de la vivienda. Contacta al administrador.');
+      return; // SALIR aquí, no continuar con null
+    }
+
+    // EN ESTE PUNTO anuncianteId SIEMPRE SERÁ number, nunca null
     this.enviandoSolicitud = true;
 
-    const solicitudDto = {
+    const solicitudData: CrearSolicitudDto = {
       viviendaId: this.viviendaId,
+      anuncianteId: anuncianteId, // Ahora es definitivamente number
       mensaje: this.mensajeSolicitud.trim() || undefined
     };
 
-    this.solicitudService.crearSolicitud(this.usuarioActual.id, solicitudDto).subscribe({
-      next: (solicitud) => {
-        this.solicitudActual = solicitud;
+    console.log('Enviando solicitud:', solicitudData);
+
+    this.solicitudService.crearSolicitud(this.usuarioActual.id, solicitudData).subscribe({
+      next: (response) => {
+        console.log('Solicitud enviada correctamente:', response);
+        this.solicitudEnviada = true;
         this.tieneSolicitudPendiente = true;
-        this.mostrandoFormularioSolicitud = false;
-        this.mensajeSolicitud = '';
         this.enviandoSolicitud = false;
+        this.cerrarFormularioSolicitud();
         
-        // Mostrar modal de éxito
-        alert('¡Solicitud enviada correctamente! El anunciante será notificado.');
+        // Recargar datos para refrescar el estado
+        this.verificarSolicitudPendiente();
+        this.obtenerOcupacionReal();
+        
+        alert('Solicitud enviada correctamente. El anunciante será notificado.');
       },
       error: (error) => {
         console.error('Error al enviar solicitud:', error);
         this.enviandoSolicitud = false;
-        alert('Error al enviar la solicitud: ' + (error.error?.message || 'Error desconocido'));
+        
+        let mensaje = 'Error al enviar la solicitud';
+        if (error.error?.message) {
+          mensaje = error.error.message;
+        } else if (error.status === 401) {
+          mensaje = 'No estás autorizado. Inicia sesión nuevamente.';
+        } else if (error.status === 409) {
+          mensaje = 'Ya tienes una solicitud pendiente para esta vivienda';
+        } else if (error.status === 400) {
+          mensaje = error.error?.message || 'Datos inválidos en la solicitud';
+        }
+        
+        alert(mensaje);
       }
     });
   }
 
-  // NUEVO: Cancelar solicitud pendiente
-  cancelarSolicitudPendiente(): void {
-    if (!this.solicitudActual || !this.usuarioActual) return;
+  // MEJORAR verificarSolicitudPendiente con reintento:
+  verificarSolicitudPendiente(): void {
+    if (!this.usuarioActual?.id || !this.viviendaId) return;
 
-    if (confirm('¿Estás seguro de que quieres cancelar tu solicitud?')) {
-      this.solicitudService.cancelarSolicitud(this.solicitudActual.id, this.usuarioActual.id).subscribe({
-        next: () => {
-          this.solicitudActual = null;
-          this.tieneSolicitudPendiente = false;
-          alert('Solicitud cancelada correctamente');
-        },
-        error: (error) => {
-          console.error('Error al cancelar solicitud:', error);
-          alert('Error al cancelar la solicitud');
-        }
-      });
+    console.log('Verificando estado del estudiante:', this.usuarioActual.id, 'para vivienda:', this.viviendaId);
+
+    // Verificar solicitud pendiente
+    this.solicitudService.verificarSolicitudPendiente(this.usuarioActual.id, this.viviendaId).subscribe({
+      next: (tieneSolicitud) => {
+        this.tieneSolicitudPendiente = tieneSolicitud;
+        console.log('Tiene solicitud pendiente:', tieneSolicitud);
+      },
+      error: (error) => {
+        console.error('Error al verificar solicitud pendiente:', error);
+        this.tieneSolicitudPendiente = false;
+      }
+    });
+
+    // Verificar si ya pertenece a la vivienda
+    this.solicitudService.verificarPertenenciaVivienda(this.usuarioActual.id, this.viviendaId).subscribe({
+      next: (pertenece) => {
+        this.perteneceAVivienda = pertenece;
+        console.log('Pertenece a la vivienda:', pertenece);
+      },
+      error: (error) => {
+        console.error('Error al verificar pertenencia:', error);
+        this.perteneceAVivienda = false;
+      }
+    });
+  }
+
+  puedeEditar(): boolean {
+    return this.esAnunciante && 
+           this.vivienda && 
+           this.usuarioActual && 
+           this.vivienda.anunciante?.id === this.usuarioActual.id;
+  }
+
+  editarVivienda(): void {
+    if (this.viviendaId) {
+      this.router.navigate(['/editar-vivienda', this.viviendaId]);
     }
   }
 
-  // Actualizar método existente
+  // CORREGIR puedeAplicar para incluir la verificación de pertenencia:
   puedeAplicar(): boolean {
     return this.esEstudiante && 
-           !this.yaEsResidente && 
-           !this.tieneSolicitudPendiente &&
-           this.getEstadoVivienda() !== 'Completa';
+           !this.tieneSolicitudPendiente && 
+           !this.solicitudEnviada &&
+           !this.perteneceAVivienda && // AÑADIR esta verificación
+           this.usuarioActual &&
+           this.vivienda;
   }
 
-  // Método que faltaba
-  aplicarVivienda(): void {
-    // Redirigir al formulario de solicitud o mostrar el modal
-    this.mostrarFormularioSolicitud();
+  // MEJORAR getEstadoVivienda para mostrar ocupación correcta:
+  getEstadoVivienda(): string {
+    if (!this.vivienda) return 'Estado desconocido';
+    
+    const habitaciones = this.vivienda.numeroHabitaciones || this.vivienda.habitaciones || 0;
+    const ocupacionTotal = this.vivienda.ocupacionTotal || this.vivienda.residentes?.length || 0;
+    
+    if (ocupacionTotal === 0) {
+      return 'Disponible';
+    } else if (ocupacionTotal < habitaciones) {
+      return `${ocupacionTotal}/${habitaciones} habitaciones ocupadas`;
+    } else {
+      return 'Completa';
+    }
+  }
+
+  // CORREGIR getEstadoClass para reflejar ocupación real:
+  getEstadoClass(): string {
+    if (!this.vivienda) return 'bg-secondary';
+    
+    const habitaciones = this.vivienda.numeroHabitaciones || this.vivienda.habitaciones || 0;
+    const ocupacionTotal = this.vivienda.ocupacionTotal || this.vivienda.residentes?.length || 0;
+    
+    if (ocupacionTotal === 0) {
+      return 'bg-success text-white';
+    } else if (ocupacionTotal < habitaciones) {
+      return 'bg-warning text-dark';
+    } else {
+      return 'bg-danger text-white';
+    }
+  }
+
+  onImageError(event: Event): void {
+    const target = event.target as HTMLImageElement;
+    if (target) {
+      target.src = 'https://via.placeholder.com/800x400/e9ecef/6c757d?text=Imagen+no+disponible';
+    }
+  }
+
+  formatearFecha(fecha: string | Date): string {
+    if (!fecha) return 'Fecha no disponible';
+    
+    const fechaObj = typeof fecha === 'string' ? new Date(fecha) : fecha;
+    
+    return fechaObj.toLocaleDateString('es-ES', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+  }
+
+  // AÑADIR: Método para verificar permisos de gestión
+  puedeGestionarEstudiantes(): boolean {
+    return this.esAnunciante && 
+           this.vivienda && 
+           this.usuarioActual && 
+           this.vivienda.anunciante?.id === this.usuarioActual.id;
+  }
+
+  // CORREGIR el método eliminarEstudiante (ya está en tu código, solo verificar que esté completo):
+  eliminarEstudiante(estudiante: any): void {
+    if (!this.puedeGestionarEstudiantes()) {
+      alert('No tienes permisos para eliminar estudiantes');
+      return;
+    }
+
+    // Verificar que tenemos el ID del anunciante
+    if (!this.usuarioActual?.id) {
+      alert('Error: No se pudo identificar al usuario actual');
+      return;
+    }
+
+    const confirmar = confirm(
+      `¿Estás seguro de que quieres eliminar a ${estudiante.nombre} de esta vivienda?\n\n` +
+      `Esta acción no se puede deshacer y el estudiante perderá acceso a la vivienda.`
+    );
+
+    if (!confirmar) return;
+
+    this.eliminandoEstudiante = true;
+
+    // Pasar el ID del anunciante actual
+    this.solicitudService.eliminarEstudianteDeVivienda(
+      estudiante.id, 
+      this.viviendaId, 
+      this.usuarioActual.id
+    ).subscribe({
+      next: (response) => {
+        console.log('Estudiante eliminado:', response);
+        alert('Estudiante eliminado correctamente de la vivienda');
+        
+        // Recargar la vivienda para actualizar la lista de residentes
+        this.cargarVivienda();
+        this.obtenerOcupacionReal();
+        
+        this.eliminandoEstudiante = false;
+      },
+      error: (error) => {
+        console.error('Error al eliminar estudiante:', error);
+        this.eliminandoEstudiante = false;
+        
+        let mensaje = 'Error al eliminar el estudiante';
+        if (error.error?.message || error.error) {
+          mensaje = error.error.message || error.error;
+        }
+        
+        alert(mensaje);
+      }
+    });
   }
 }

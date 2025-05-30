@@ -1,11 +1,8 @@
 package com.estupiso.controller;
 
 import com.estupiso.dto.ComunidadDto;
-import com.estupiso.dto.MunicipioDto;
 import com.estupiso.dto.ProvinciaDto;
-import com.estupiso.model.Municipio;
 import com.estupiso.service.ComunidadService;
-import com.estupiso.service.MunicipioService;
 import com.estupiso.service.ProvinciaService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -27,8 +24,6 @@ public class UbicacionController {
     @Autowired
     private ProvinciaService provinciaService;
 
-    @Autowired
-    private MunicipioService municipioService;
 
     @GetMapping("/comunidades")
     @Operation(summary = "Listar todas las comunidades (solo nombres)")
@@ -40,12 +35,6 @@ public class UbicacionController {
     @Operation(summary = "Obtener provincias por comunidad")
     public ResponseEntity<List<ProvinciaDto>> findProvinciasByComunidad(@PathVariable int comunidadId) {
         return ResponseEntity.ok(provinciaService.findByComunidadId(comunidadId));
-    }
-
-    @GetMapping("/municipios/provincia/{provinciaId}")
-    @Operation(summary = "Obtener municipios por provincia")
-    public ResponseEntity<List<MunicipioDto>> findMunicipiosByProvincia(@PathVariable int provinciaId) {
-        return ResponseEntity.ok(municipioService.findByProvinciaId(provinciaId));
     }
 
 }

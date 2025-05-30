@@ -32,27 +32,63 @@
             <i class="bi bi-arrow-left me-2"></i>Volver
           </button>
           
-          <div class="d-flex gap-2" *ngIf="usuarioActual">
+          <!-- CORREGIR: Solo mostrar para anunciantes propietarios -->
+          <div *ngIf="puedeEditar()">
             <button 
-              *ngIf="puedeEditar" 
               class="btn btn-outline-primary"
               (click)="editarVivienda()">
-              <i class="bi bi-pencil me-2"></i>Editar
+              <i class="bi bi-pencil me-2"></i>Editar Vivienda
             </button>
-            
-            <button 
-              *ngIf="puedeAplicar()" 
-              class="btn btn-primary"
-              (click)="mostrarFormularioSolicitud()">
-              <i class="bi bi-heart me-2"></i>Solicitar
-            </button>
-            
-            <span 
-              *ngIf="yaEsResidente" 
-              class="badge bg-success fs-6 px-3 py-2">
-              <i class="bi bi-check-circle me-2"></i>Ya eres residente
-            </span>
           </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- MOVER la sección de solicitud aquí, separada del header -->
+    <!-- Sección de Solicitud (para estudiantes) -->
+    <div class="row mb-4" *ngIf="usuarioActual && esEstudiante">
+      <div class="col-12 text-center">
+        <!-- Botón para estudiantes que pueden aplicar -->
+        <button 
+          *ngIf="puedeAplicar()" 
+          class="btn btn-primary btn-lg px-4 py-3"
+          (click)="mostrarFormularioSolicitud()">
+          <i class="bi bi-heart me-2"></i>Solicitar Vivienda
+        </button>
+        
+        <!-- Estado si ya tiene solicitud pendiente -->
+        <div *ngIf="tieneSolicitudPendiente && !perteneceAVivienda" class="alert alert-info">
+          <i class="bi bi-clock me-2"></i>Ya tienes una solicitud pendiente para esta vivienda
+        </div>
+        
+        <!-- Estado si ya envió solicitud -->
+        <div *ngIf="solicitudEnviada" class="alert alert-success">
+          <i class="bi bi-check-circle me-2"></i>Solicitud enviada correctamente
+        </div>
+        
+        <!-- NUEVO: Estado si ya pertenece a la vivienda -->
+        <div *ngIf="perteneceAVivienda" class="alert alert-success">
+          <i class="bi bi-house-check me-2"></i>
+          <strong>¡Felicidades!</strong> Ya formas parte de esta vivienda
+        </div>
+      </div>
+    </div>
+
+    <!-- Para anunciantes propietarios -->
+    <div class="row mb-4" *ngIf="usuarioActual && esAnunciante && puedeEditar()">
+      <div class="col-12 text-center">
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle me-2"></i>Esta es una de tus viviendas publicadas
+        </div>
+      </div>
+    </div>
+
+    <!-- Mensaje para usuarios no logueados -->
+    <div class="row mb-4" *ngIf="!usuarioActual">
+      <div class="col-12 text-center">
+        <div class="alert alert-warning">
+          <i class="bi bi-person-x me-2"></i>
+          <a routerLink="/login" class="btn btn-primary">Inicia sesión</a> para solicitar esta vivienda
         </div>
       </div>
     </div>
@@ -62,7 +98,7 @@
       <div class="col-12">
         <h1 class="h2 mb-3 text-primary">{{ vivienda.nombre }}</h1>
         <div class="d-flex align-items-center gap-2 mb-2">
-          <span [class]="'badge fs-6 px-3 py-2 ' + getEstadoClass() + ' bg-light border'">
+          <span [class]="'badge fs-6 px-3 py-2 ' + getEstadoClass()">
             {{ getEstadoVivienda() }}
           </span>
           <span class="badge bg-primary fs-6 px-3 py-2">
@@ -166,6 +202,8 @@
             <h4 class="text-primary mb-3">
               <i class="bi bi-map me-2"></i>Ubicación
             </h4>
+            
+
             <app-map
               [direccion]="vivienda.calle"
               [numero]="vivienda.numero"
@@ -173,6 +211,7 @@
               [provincia]="vivienda.provincia"
               [nombreVivienda]="vivienda.nombre">
             </app-map>
+
             <div class="mt-3 text-center">
               <small class="text-muted">
                 <i class="bi bi-info-circle me-1"></i>
@@ -214,8 +253,18 @@
                 <div class="info-item text-center">
                   <i class="bi bi-people text-success fs-3"></i>
                   <div class="mt-2">
-                    <div class="h5 mb-1">{{ vivienda.residentes?.length || 0 }}/{{ vivienda.numeroHabitaciones }}</div>
+                    <!-- MOSTRAR ocupación real (residentes + solicitudes aceptadas) -->
+                    <div class="h5 mb-1">
+                      {{ vivienda.ocupacionTotal || (vivienda.residentes?.length || 0) }}/{{ vivienda.numeroHabitaciones }}
+                    </div>
                     <small class="text-muted">Ocupación</small>
+                    
+                    <!-- AÑADIR desglose si hay solicitudes aceptadas -->
+                    <div *ngIf="vivienda.ocupacionPorSolicitudes > 0" class="mt-1">
+                      <small class="text-info">
+                        ({{ vivienda.residentes?.length || 0 }} actuales + {{ vivienda.ocupacionPorSolicitudes }} aceptados)
+                      </small>
+                    </div>
                   </div>
                 </div>
               </div>
@@ -229,8 +278,11 @@
               <div class="mb-2">
                 <strong>{{ vivienda.calle }}, {{ vivienda.numero }}</strong>
               </div>
-              <div class="text-muted">
-                {{ vivienda.municipio }}, {{ vivienda.provincia }}
+              <div class="mb-2">
+                <small class="text-muted">
+                  <i class="bi bi-geo me-1"></i>
+                  {{ vivienda.municipio }}, {{ vivienda.provincia }}
+                </small>
               </div>
               <div class="text-muted">
                 {{ vivienda.comunidad }}
@@ -250,7 +302,7 @@
                 <i class="bi bi-person-circle fs-2 text-muted"></i>
               </div>
               <div class="flex-grow-1">
-                <div class="fw-semibold mb-2">{{ vivienda.anunciante?.nombre || 'Anunciante' }}</div>
+                <div class="fw-semibold mb-2">{{ vivienda.anunciante?.anuncianteNombre || 'Anunciante' }}</div>
                 
                 <!-- Email con enlace -->
                 <div class="contact-info mb-2">
@@ -308,30 +360,167 @@
       </div>
     </div>
 
-    <!-- Residentes actuales -->
-    <div class="row mt-4" *ngIf="vivienda.residentes && vivienda.residentes.length > 0">
+    <!-- Residentes actuales con diseño mejorado -->
+    <div class="row mt-4" *ngIf="vivienda.residentes && vivienda.residentes.length > 0 && usuarioActual.tipoUsuario == 'ANUNCIANTE'">
       <div class="col-12">
         <div class="card border-0 shadow-lg residents-card">
           <div class="card-body p-4">
             <h4 class="text-primary mb-3">
               <i class="bi bi-people me-2"></i>Residentes Actuales
+              <span class="badge bg-primary ms-2">{{ vivienda.residentes.length }}</span>
             </h4>
+            
             <div class="row g-3">
-              <div 
-                class="col-md-6 col-lg-4" 
-                *ngFor="let residente of vivienda.residentes">
-                <div class="card bg-light border-0">
-                  <div class="card-body text-center p-3">
-                    <i class="bi bi-person-circle fs-2 text-primary mb-2"></i>
-                    <h6 class="mb-1">{{ residente.nombre }}</h6>
-                    <small class="text-muted">{{ residente.email }}</small>
+              <div class="col-md-6" *ngFor="let residente of vivienda.residentes">
+                <div class="card border-1 h-100">
+                  <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-start">
+                      <div class="flex-grow-1">
+                        <h6 class="card-title mb-1">
+                          <i class="bi bi-person me-2 text-primary"></i>
+                          {{ residente.nombre }}
+                        </h6>
+                        <p class="text-muted mb-1 small">
+                          <i class="bi bi-envelope me-1"></i>{{ residente.email }}
+                        </p>
+                        <p class="text-muted mb-0 small" *ngIf="residente.telefono">
+                          <i class="bi bi-telephone me-1"></i>{{ residente.telefono }}
+                        </p>
+                      </div>
+                      
+                      <!-- BOTÓN DE ELIMINAR - Solo para anunciantes propietarios -->
+                      <div *ngIf="puedeGestionarEstudiantes()" class="ms-3">
+                        <button 
+                          class="btn btn-outline-danger btn-sm"
+                          (click)="eliminarEstudiante(residente)"
+                          [disabled]="eliminandoEstudiante"
+                          title="Eliminar estudiante de la vivienda">
+                          <i class="bi bi-trash me-1"></i>
+                          <span *ngIf="!eliminandoEstudiante">Eliminar</span>
+                          <span *ngIf="eliminandoEstudiante">
+                            <span class="spinner-border spinner-border-sm me-1" role="status"></span>
+                            Eliminando...
+                          </span>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    <!-- Información adicional del estudiante -->
+                    <div class="mt-2" *ngIf="residente.universidad || residente.curso">
+                      <small class="text-muted">
+                        <span *ngIf="residente.universidad">
+                          <i class="bi bi-mortarboard me-1"></i>{{ residente.universidad }}
+                        </span>
+                        <span *ngIf="residente.curso" class="ms-2">
+                          - {{ residente.curso }}
+                        </span>
+                      </small>
+                    </div>
                   </div>
                 </div>
+              </div>
+            </div>
+            
+            <!-- Información adicional para anunciantes -->
+            <div *ngIf="puedeGestionarEstudiantes()" class="mt-3">
+              <div class="alert alert-info">
+                <i class="bi bi-info-circle me-2"></i>
+                <strong>Gestión de Residentes:</strong> Puedes eliminar estudiantes de tu vivienda cuando sea necesario. 
+                Esta acción cancelará automáticamente sus solicitudes aceptadas.
               </div>
             </div>
           </div>
         </div>
       </div>
     </div>
+
+    <!-- Estado si no hay residentes -->
+    <div class="card border-0 shadow-lg residents-card mt-4" *ngIf="!vivienda.residentes || vivienda.residentes.length === 0">
+      <div class="card-body p-4 text-center">
+        <h4 class="text-primary mb-3">
+          <i class="bi bi-people me-2"></i>Residentes Actuales
+        </h4>
+        <div class="text-muted">
+          <i class="bi bi-house display-4 text-muted mb-3"></i>
+          <p>Esta vivienda aún no tiene residentes.</p>
+          <p *ngIf="puedeGestionarEstudiantes()" class="small">
+            Los estudiantes aparecerán aquí cuando aceptes sus solicitudes.
+          </p>
+        </div>
+      </div>
+    </div>
   </div>
 </div>
+
+<!-- AÑADIR Modal de solicitud al final del archivo -->
+<!-- Modal de Solicitud -->
+<div class="modal fade" [class.show]="mostrandoFormularioSolicitud" 
+     [style.display]="mostrandoFormularioSolicitud ? 'block' : 'none'"
+     tabindex="-1" 
+     *ngIf="mostrandoFormularioSolicitud">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">
+          <i class="bi bi-heart me-2"></i>Solicitar Vivienda
+        </h5>
+        <button 
+          type="button" 
+          class="btn-close" 
+          (click)="cerrarFormularioSolicitud()">
+        </button>
+      </div>
+      
+      <div class="modal-body">
+        <div class="mb-3">
+          <p><strong>Vivienda:</strong> {{ vivienda?.nombre || 'Vivienda seleccionada' }}</p>
+          <p><strong>Tu solicitud como:</strong> {{ usuarioActual?.nombre }}</p>
+        </div>
+        
+        <div class="mb-3">
+          <label for="mensajeSolicitud" class="form-label">
+            Mensaje para el anunciante <small class="text-muted">(opcional)</small>
+          </label>
+          <textarea 
+            class="form-control" 
+            id="mensajeSolicitud"
+            [(ngModel)]="mensajeSolicitud"
+            rows="4"
+            placeholder="Cuéntale al anunciante por qué estás interesado en esta vivienda..."
+            maxlength="500">
+          </textarea>
+          <div class="form-text">
+            {{ mensajeSolicitud.length }}/500 caracteres
+          </div>
+        </div>
+        
+        <div class="alert alert-info">
+          <i class="bi bi-info-circle me-2"></i>
+          <small>El anunciante recibirá tu solicitud y podrá contactarte si está interesado.</small>
+        </div>
+      </div>
+      
+      <div class="modal-footer">
+        <button 
+          type="button" 
+          class="btn btn-outline-secondary" 
+          (click)="cerrarFormularioSolicitud()"
+          [disabled]="enviandoSolicitud">
+          Cancelar
+        </button>
+        <button 
+          type="button" 
+          class="btn btn-primary" 
+          (click)="enviarSolicitud()"
+          [disabled]="enviandoSolicitud">
+          <span *ngIf="enviandoSolicitud" class="spinner-border spinner-border-sm me-2"></span>
+          <i *ngIf="!enviandoSolicitud" class="bi bi-heart me-2"></i>
+          {{ enviandoSolicitud ? 'Enviando...' : 'Enviar Solicitud' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Backdrop del modal -->
+<div class="modal-backdrop fade show" *ngIf="mostrandoFormularioSolicitud" (click)="cerrarFormularioSolicitud()"></div>

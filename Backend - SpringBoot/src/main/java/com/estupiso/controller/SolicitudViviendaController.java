@@ -79,4 +79,54 @@ public class SolicitudViviendaController {
         solicitudService.cancelarSolicitud(solicitudId, estudianteId);
         return ResponseEntity.ok().build();
     }
+
+    // Verificar si existe solicitud pendiente
+    @GetMapping("/verificar/{estudianteId}/{viviendaId}")
+    public ResponseEntity<Boolean> verificarSolicitudPendiente(
+            @PathVariable Integer estudianteId,
+            @PathVariable Integer viviendaId) {
+
+        boolean tieneSolicitudPendiente = solicitudService.verificarSolicitudPendiente(estudianteId, viviendaId);
+        return ResponseEntity.ok(tieneSolicitudPendiente);
+    }
+
+    // AÑADIR endpoint para obtener ocupación actual
+    @GetMapping("/ocupacion/{viviendaId}")
+    public ResponseEntity<Integer> obtenerOcupacionActual(@PathVariable Integer viviendaId) {
+        try {
+            int ocupacion = solicitudService.obtenerOcupacionActual(viviendaId);
+            return ResponseEntity.ok(ocupacion);
+        } catch (Exception e) {
+            return ResponseEntity.ok(0); // Devolver 0 si hay error
+        }
+    }
+
+    // MEJORAR endpoint de verificar pertenencia
+    @GetMapping("/pertenece/{estudianteId}/{viviendaId}")
+    public ResponseEntity<Boolean> verificarPertenenciaVivienda(
+            @PathVariable Integer estudianteId,
+            @PathVariable Integer viviendaId) {
+
+        try {
+            boolean pertenece = solicitudService.verificarPertenenciaVivienda(estudianteId, viviendaId);
+            return ResponseEntity.ok(pertenece);
+        } catch (Exception e) {
+            return ResponseEntity.ok(false); // Devolver false si hay error
+        }
+    }
+
+    // Eliminar estudiante de vivienda (solo anunciante propietario)
+    @DeleteMapping("/eliminar-estudiante/{estudianteId}/{viviendaId}/{anuncianteId}")
+    public ResponseEntity<String> eliminarEstudianteDeVivienda(
+            @PathVariable Integer estudianteId,
+            @PathVariable Integer viviendaId,
+            @PathVariable Integer anuncianteId) {
+
+        try {
+            solicitudService.eliminarEstudianteDeVivienda(estudianteId, viviendaId, anuncianteId);
+            return ResponseEntity.ok("Estudiante eliminado de la vivienda correctamente");
+        } catch (Exception e) {
+            return ResponseEntity.badRequest().body("Error: " + e.getMessage());
+        }
+    }
 }

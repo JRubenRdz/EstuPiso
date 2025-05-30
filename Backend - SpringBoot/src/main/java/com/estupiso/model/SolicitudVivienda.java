@@ -1,9 +1,11 @@
-
 package com.estupiso.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.NotNull;
-import lombok.*;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.time.LocalDateTime;
 
@@ -16,11 +18,19 @@ public class SolicitudVivienda extends DomainEntity {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "estudiante_id", nullable = false)
+    @JsonIgnore // Evita serialización circular
     @NotNull
     private Estudiante estudiante;
 
     @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "anunciante_id", nullable = false)
+    @JsonIgnore // Evita serialización circular
+    @NotNull
+    private Anunciante anunciante;
+
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "vivienda_id", nullable = false)
+    @JsonIgnore // Evita serialización circular
     @NotNull
     private Vivienda vivienda;
 
@@ -35,8 +45,8 @@ public class SolicitudVivienda extends DomainEntity {
     private LocalDateTime fechaRespuesta;
 
     @Column(length = 500)
-    private String mensaje; // Mensaje del estudiante al solicitar
+    private String mensaje;
 
     @Column(length = 500)
-    private String respuestaAnunciante; // Respuesta del anunciante
+    private String respuestaAnunciante;
 }

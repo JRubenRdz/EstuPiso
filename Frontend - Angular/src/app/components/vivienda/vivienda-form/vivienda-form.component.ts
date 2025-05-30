@@ -29,16 +29,17 @@ export class ViviendaFormComponent implements OnInit {
   // Enum para el template
   tiposVivienda = Object.values(TiposVivienda);
   
-  // Datos de ubicación
+  // Datos de ubicación - ELIMINAR municipios
   comunidades: any[] = [];
   provincias: any[] = [];
-  municipios: any[] = [];
   provinciasFiltradas: any[] = [];
-  municipiosFiltrados: any[] = [];
+  // ELIMINAR: municipios: any[] = [];
+  // ELIMINAR: municipiosFiltrados: any[] = [];
 
-  // Estado de carga para selectores
+  // Estado de carga para selectores - ELIMINAR loadingMunicipios
   loadingProvincias = false;
-  loadingMunicipios = false;
+  // ELIMINAR: loadingMunicipios = false;
+
   constructor(
     private fb: FormBuilder,
     private router: Router,
@@ -84,14 +85,15 @@ export class ViviendaFormComponent implements OnInit {
       nombre: ['', [Validators.required, Validators.minLength(3), Validators.maxLength(100)]],
       comunidad: ['', [Validators.required]],
       provincia: ['', [Validators.required]],
-      municipio: ['', [Validators.required]],
+      // CAMBIAR: Municipio ahora es un campo de texto simple
+      municipio: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
       calle: ['', [Validators.required, Validators.minLength(2), Validators.maxLength(100)]],
       numero: ['', [Validators.required, Validators.pattern(/^\d+[A-Za-z]?$/)]],
       descripcion: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(1000)]],
       precioMensual: ['', [Validators.required, Validators.min(1), Validators.max(9999)]],
       tipoVivienda: ['', [Validators.required]],
       numeroHabitaciones: ['', [Validators.required, Validators.min(1), Validators.max(20)]],
-      fotos: this.fb.array([this.createFotoControl()]) // <-- Nuevo FormArray
+      fotos: this.fb.array([this.createFotoControl()])
     });
   }
 
@@ -107,14 +109,14 @@ export class ViviendaFormComponent implements OnInit {
 
   // Añadir una nueva foto
   addFoto(): void {
-    if (this.fotosArray.length < 10) { // Límite de 10 fotos
+    if (this.fotosArray.length < 10) {
       this.fotosArray.push(this.createFotoControl());
     }
   }
 
   // Remover la última foto
   removeFoto(): void {
-    if (this.fotosArray.length > 1) { // Mínimo 1 foto
+    if (this.fotosArray.length > 1) {
       this.fotosArray.removeAt(this.fotosArray.length - 1);
     }
   }
@@ -163,16 +165,17 @@ export class ViviendaFormComponent implements OnInit {
       }
     });
   }
+
   onComunidadChange(comunidadNombre: string): void {
     if (!comunidadNombre) {
       this.provinciasFiltradas = [];
-      this.municipiosFiltrados = [];
+      // CAMBIAR: Reset municipio como string simple
       this.viviendaForm.patchValue({ provincia: '', municipio: '' });
       return;
     }
 
     this.loadingProvincias = true;
-    this.municipiosFiltrados = [];
+    // CAMBIAR: Reset municipio como string simple
     this.viviendaForm.patchValue({ provincia: '', municipio: '' });
 
     // Buscar la comunidad por nombre para obtener su ID
@@ -190,33 +193,6 @@ export class ViviendaFormComponent implements OnInit {
       });
     } else {
       this.loadingProvincias = false;
-    }
-  }
-  onProvinciaChange(provinciaNombre: string): void {
-    if (!provinciaNombre) {
-      this.municipiosFiltrados = [];
-      this.viviendaForm.patchValue({ municipio: '' });
-      return;
-    }
-
-    this.loadingMunicipios = true;
-    this.viviendaForm.patchValue({ municipio: '' });
-
-    // Buscar la provincia por nombre para obtener su ID
-    const provinciaSeleccionada = this.provinciasFiltradas.find(p => p.nombre === provinciaNombre);
-    if (provinciaSeleccionada) {
-      this.ubicacionService.getMunicipiosByProvincia(provinciaSeleccionada.id).subscribe({
-        next: (data) => {
-          this.municipiosFiltrados = data;
-          this.loadingMunicipios = false;
-        },
-        error: (error) => {
-          console.error('Error al cargar municipios:', error);
-          this.loadingMunicipios = false;
-        }
-      });
-    } else {
-      this.loadingMunicipios = false;
     }
   }
 
@@ -239,24 +215,50 @@ export class ViviendaFormComponent implements OnInit {
   }
 
   populateForm(vivienda: any): void {
+    console.log('=== DEBUG POPULATE FORM ===');
+    console.log('Vivienda recibida:', vivienda);
+    console.log('Fotos de la vivienda:', vivienda.fotos);
+
     // Limpiar el array de fotos primero
     while (this.fotosArray.length) {
       this.fotosArray.removeAt(0);
     }
 
-    // Añadir las fotos existentes o una vacía si no hay fotos
+    // CORREGIR: Manejar diferentes estructuras de fotos
     if (vivienda.fotos && vivienda.fotos.length > 0) {
-      vivienda.fotos.forEach((foto: any) => {
-        this.fotosArray.push(this.fb.control(foto.imagen, [
-          Validators.required, 
-          Validators.pattern(/^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)$/i)
-        ]));
+      vivienda.fotos.forEach((foto: any, index: number) => {
+        console.log(`Procesando foto ${index} para edición:`, foto);
+        
+        let fotoUrl = '';
+        
+        // Manejar diferentes estructuras posibles
+        if (typeof foto === 'string') {
+          fotoUrl = foto;
+        } else if (foto.imagen) {
+          fotoUrl = foto.imagen;
+        } else if (foto.url) {
+          fotoUrl = foto.url;
+        }
+        
+        console.log(`URL extraída para foto ${index}:`, fotoUrl);
+        
+        if (fotoUrl) {
+          this.fotosArray.push(this.fb.control(fotoUrl, [
+            Validators.required, 
+            Validators.pattern(/^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)$/i)
+          ]));
+        }
       });
-    } else {
+    }
+    
+    // Si no hay fotos válidas, añadir una vacía
+    if (this.fotosArray.length === 0) {
       this.fotosArray.push(this.createFotoControl());
     }
 
-    // Primero llenar los datos básicos
+    console.log('FormArray de fotos después de poblar:', this.fotosArray.value);
+
+    // Primero llenar los datos básicos - ELIMINAR fotos del patchValue
     this.viviendaForm.patchValue({
       nombre: vivienda.nombre,
       calle: vivienda.calle,
@@ -265,13 +267,14 @@ export class ViviendaFormComponent implements OnInit {
       precioMensual: vivienda.precioMensual,
       tipoVivienda: vivienda.tipoVivienda,
       numeroHabitaciones: vivienda.numeroHabitaciones
+      // ELIMINAR: fotos: vivienda.fotos - ya las manejamos arriba
     });
 
     // Cargar datos de ubicación de forma secuencial
     this.loadLocationDataForEdit(vivienda);
   }
 
-  // Nuevo método para cargar ubicación en modo edición
+  // SIMPLIFICAR el método de carga de ubicación para edición
   private loadLocationDataForEdit(vivienda: any): void {
     // 1. Primero cargar comunidad
     if (vivienda.comunidad) {
@@ -289,27 +292,11 @@ export class ViviendaFormComponent implements OnInit {
             // 3. Después de cargar provincias, establecer la provincia
             if (vivienda.provincia) {
               this.viviendaForm.patchValue({ provincia: vivienda.provincia });
-              
-              // 4. Buscar y cargar municipios de esa provincia
-              const provinciaSeleccionada = this.provinciasFiltradas.find(p => p.nombre === vivienda.provincia);
-              if (provinciaSeleccionada) {
-                this.loadingMunicipios = true;
-                this.ubicacionService.getMunicipiosByProvincia(provinciaSeleccionada.id).subscribe({
-                  next: (municipios) => {
-                    this.municipiosFiltrados = municipios;
-                    this.loadingMunicipios = false;
-                    
-                    // 5. Finalmente establecer el municipio
-                    if (vivienda.municipio) {
-                      this.viviendaForm.patchValue({ municipio: vivienda.municipio });
-                    }
-                  },
-                  error: (error) => {
-                    console.error('Error al cargar municipios para edición:', error);
-                    this.loadingMunicipios = false;
-                  }
-                });
-              }
+            }
+
+            // 4. SIMPLIFICAR: Establecer municipio directamente como string
+            if (vivienda.municipio) {
+              this.viviendaForm.patchValue({ municipio: vivienda.municipio });
             }
           },
           error: (error) => {
@@ -323,12 +310,22 @@ export class ViviendaFormComponent implements OnInit {
 
   onSubmit(): void {
     if (this.viviendaForm.invalid) {
+      console.log('Formulario inválido - errores:', this.viviendaForm.errors);
       this.markFormGroupTouched();
       return;
     }
 
     this.isSubmitting = true;
-    const formData = this.viviendaForm.value;
+    
+    // OBTENER los valores de forma explícita en lugar de usar formData
+    const formValue = this.viviendaForm.value;
+    const formDataRaw = this.viviendaForm.getRawValue(); // USAR getRawValue() para obtener TODO
+    
+    console.log('=== DEBUG FORM VALUES ===');
+    console.log('Form.value:', formValue);
+    console.log('Form.getRawValue():', formDataRaw);
+    console.log('FormArray fotos value:', this.fotosArray.value);
+    console.log('FormArray fotos getRawValue:', this.fotosArray.getRawValue());
     
     // Obtener el anunciante actual desde JWT
     const token = localStorage.getItem('token');
@@ -342,27 +339,67 @@ export class ViviendaFormComponent implements OnInit {
     const decoded: any = jwtDecode(token);
     const currentUserId = decoded.id;
     
-    // Preparar las fotos en el formato correcto para el backend
-    const fotosFormatted = formData.fotos
-      .filter((url: string) => url.trim()) // Filtrar URLs vacías
-      .map((url: string) => ({ imagen: url.trim() })); // <-- CAMBIO: 'url' por 'imagen'
+    // EXTRAER fotos directamente del FormArray
+    const fotosRaw = this.fotosArray.getRawValue();
+    console.log('Fotos extraídas del FormArray:', fotosRaw);
     
-    // Preparar el payload
+    const fotosFormatted = fotosRaw
+      .filter((url: string) => url && url.trim() && url.length > 0)
+      .map((url: string, index: number) => {
+        console.log(`Formateando foto ${index}:`, url);
+        return { 
+          imagen: url.trim() 
+        };
+      });
+  
+    console.log('Fotos formateadas para backend:', fotosFormatted);
+  
+    // VERIFICAR que fotosFormatted no esté vacío
+    if (fotosFormatted.length === 0) {
+      this.modalMessage = 'Debes añadir al menos una foto válida';
+      this.showErrorModal = true;
+      this.isSubmitting = false;
+      return;
+    }
+    
+    // CONSTRUIR el payload manualmente, campo por campo
     const viviendaPayload = {
-      ...formData,
+      nombre: formDataRaw.nombre?.trim(),
+      comunidad: formDataRaw.comunidad,
+      provincia: formDataRaw.provincia,
+      municipio: formDataRaw.municipio?.trim(),
+      calle: formDataRaw.calle?.trim(),
+      numero: formDataRaw.numero?.trim(),
+      descripcion: formDataRaw.descripcion?.trim(),
+      precioMensual: Number(formDataRaw.precioMensual),
+      tipoVivienda: formDataRaw.tipoVivienda,
+      numeroHabitaciones: Number(formDataRaw.numeroHabitaciones),
       fotos: fotosFormatted,
-      fechaPublicacion: this.isEditMode ? undefined : new Date(),
-      ultimaEdicion: new Date(),
+      fechaPublicacion: this.isEditMode ? undefined : new Date().toISOString(),
+      ultimaEdicion: new Date().toISOString(),
       anunciante: {
         id: currentUserId
       }
     };
 
+    // Si estamos editando, añadir el ID
     if (this.isEditMode && this.viviendaId) {
-      viviendaPayload.id = this.viviendaId;
-      
+      (viviendaPayload as any).id = this.viviendaId;
+    }
+
+    // DEBUG FINAL: Verificar payload completo antes de enviarlo
+    console.log('=== PAYLOAD FINAL ANTES DE ENVIAR ===');
+    console.log('Payload completo:', viviendaPayload);
+    console.log('Fotos en payload:', viviendaPayload.fotos);
+    console.log('Longitud array fotos:', viviendaPayload.fotos.length);
+    console.log('JSON.stringify del payload:', JSON.stringify(viviendaPayload, null, 2));
+
+    // ENVIAR al backend
+    if (this.isEditMode && this.viviendaId) {
+      console.log('Enviando actualización...');
       this.viviendaService.actualizarVivienda(viviendaPayload).subscribe({
-        next: (viviendaActualizada) => { // <-- Ahora recibe la vivienda actualizada
+        next: (viviendaActualizada) => {
+          console.log('Vivienda actualizada exitosamente:', viviendaActualizada);
           this.modalMessage = 'Vivienda actualizada correctamente';
           this.showSuccessModal = true;
           this.isSubmitting = false;
@@ -375,22 +412,19 @@ export class ViviendaFormComponent implements OnInit {
         }
       });
     } else {
+      console.log('Enviando creación...');
       this.viviendaService.crearVivienda(viviendaPayload).subscribe({
         next: (response) => {
-          console.log('Respuesta exitosa:', response);
-          this.modalMessage = this.isEditMode 
-            ? 'Vivienda actualizada correctamente'
-            : 'Vivienda creada correctamente';
+          console.log('Vivienda creada exitosamente:', response);
+          this.modalMessage = 'Vivienda creada correctamente';
           this.showSuccessModal = true;
           this.isSubmitting = false;
         },
         error: (error) => {
-          console.error('Error completo:', error);
+          console.error('Error al crear vivienda:', error);
           
           if (error.status === 201) {
-            this.modalMessage = this.isEditMode 
-              ? 'Vivienda actualizada correctamente'
-              : 'Vivienda creada correctamente';
+            this.modalMessage = 'Vivienda creada correctamente';
             this.showSuccessModal = true;
             this.isSubmitting = false;
             return;
@@ -401,9 +435,7 @@ export class ViviendaFormComponent implements OnInit {
           } else if (error.status === 409) {
             this.modalMessage = 'Ya existe una vivienda en esa dirección';
           } else {
-            this.modalMessage = this.isEditMode 
-              ? 'Error al actualizar la vivienda'
-              : 'Error al crear la vivienda';
+            this.modalMessage = 'Error al crear la vivienda';
           }
           
           this.showErrorModal = true;
@@ -451,6 +483,7 @@ export class ViviendaFormComponent implements OnInit {
     this.router.navigate(['/']);
   }
 
+  // ... métodos de modal sin cambios ...
   abrirModal(tipo: 'success' | 'error'): void {
     const modalElement = document.getElementById(tipo === 'success' ? 'successModal' : 'errorModal');
     if (modalElement) {
@@ -474,7 +507,6 @@ export class ViviendaFormComponent implements OnInit {
     }
   }
 
-  // Método para mostrar automáticamente los modales cuando cambian las propiedades
   ngDoCheck(): void {
     if (this.showSuccessModal) {
       this.abrirModal('success');
@@ -486,20 +518,21 @@ export class ViviendaFormComponent implements OnInit {
     }
   }
 
+  // SIMPLIFICAR setupFormSubscriptions - ELIMINAR suscripción a provincia
   setupFormSubscriptions(): void {
-    // Suscripción para cambios en la comunidad
+    // Solo suscripción para cambios en la comunidad
     this.viviendaForm.get('comunidad')?.valueChanges.subscribe(comunidadNombre => {
       if (comunidadNombre) {
         this.onComunidadChange(comunidadNombre);
       }
     });
 
-    // Suscripción para cambios en la provincia
-    this.viviendaForm.get('provincia')?.valueChanges.subscribe(provinciaNombre => {
-      if (provinciaNombre) {
-        this.onProvinciaChange(provinciaNombre);
-      }
-    });
+    // ELIMINAR: Suscripción para cambios en la provincia
+    // this.viviendaForm.get('provincia')?.valueChanges.subscribe(provinciaNombre => {
+    //   if (provinciaNombre) {
+    //     this.onProvinciaChange(provinciaNombre);
+    //   }
+    // });
 
     // Opcional: Suscripción para validar URLs de fotos en tiempo real
     this.fotosArray.valueChanges.subscribe(fotos => {
@@ -508,7 +541,6 @@ export class ViviendaFormComponent implements OnInit {
     });
   }
 
-  // Método para manejar error de carga de imagen
   onImageError(event: Event): void {
     const target = event.target as HTMLImageElement;
     if (target) {
@@ -516,7 +548,6 @@ export class ViviendaFormComponent implements OnInit {
     }
   }
 
-  // Método para manejar carga exitosa de imagen
   onImageLoad(event: Event): void {
     const target = event.target as HTMLImageElement;
     if (target) {

@@ -59,13 +59,26 @@
     <div class="col-12 col-md-6 col-lg-4" *ngFor="let vivienda of viviendas">
       <div class="card shadow-sm border-0 h-100 vivienda-card">
         <!-- Imagen -->
-        <div class="card-img-container">
+        <div class="card-img-container position-relative">
+          <!-- Imagen principal -->
           <img 
-            [src]="vivienda.fotos && vivienda.fotos.length > 0 ? vivienda.fotos[0].imagen : '/assets/placeholder-house.jpg'" 
+            [src]="getImagenPrincipal(vivienda)" 
             [alt]="vivienda.nombre"
             class="card-img-top vivienda-img"
-            (error)="onImageError($event)">
-          <div class="overlay-badges">
+            (error)="onImageError($event)"
+            [class.placeholder-img]="!tieneImagenValida(vivienda)"
+            style="height: 200px; object-fit: cover; width: 100%;">
+            
+          <!-- Overlay para cuando no hay imagen -->
+          <div 
+            *ngIf="!tieneImagenValida(vivienda)"
+            class="position-absolute top-50 start-50 translate-middle text-center text-muted">
+            <i class="bi bi-house display-4"></i>
+            <div class="mt-2 small">Sin imagen</div>
+          </div>
+          
+          <!-- Badges superpuestos -->
+          <div class="overlay-badges position-absolute top-0 end-0 m-2">
             <span [class]="'badge ' + getEstadoClass(vivienda) + ' bg-white border'">
               {{ getEstadoVivienda(vivienda) }}
             </span>
@@ -83,7 +96,7 @@
           
           <div class="mb-2">
             <small class="text-muted">
-              <i class="bi bi-geo-alt me-1"></i>
+              <i class="bi bi-geo me-1"></i>
               {{ vivienda.municipio }}, {{ vivienda.provincia }}
             </small>
           </div>

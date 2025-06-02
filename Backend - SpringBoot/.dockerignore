@@ -1,0 +1,13 @@
+target/
+!target/EstuPiso-0.0.1-SNAPSHOT.jar
+.git
+.gitignore
+README.md
+Dockerfile
+.dockerignore
+node_modules
+npm-debug.log
+.env
+.env.local
+.env.production
+.env.staging

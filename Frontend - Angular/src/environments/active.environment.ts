@@ -3,7 +3,7 @@ import { environment as prodEnvironment } from './environment.production';
 import { environment as testEnvironment } from './environment.tests';
 
 // CAMBIAR SOLO ESTA LÍNEA PARA CAMBIAR EL ENTORNO ACTIVO:
-const ACTIVE_ENVIRONMENT = 'development'; // 'development' | 'production' | 'tests'
+const ACTIVE_ENVIRONMENT = 'production'; // 'development' | 'production' | 'tests'
 
 // Mapeo de entornos
 const environments = {

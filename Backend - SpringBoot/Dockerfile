@@ -1,4 +1,3 @@
-# filepath: Backend - SpringBoot/Dockerfile
 FROM openjdk:21-jdk-slim
 
 RUN apt-get update && apt-get install -y maven && rm -rf /var/lib/apt/lists/*
@@ -10,23 +9,17 @@ RUN mvn dependency:go-offline -B
 
 COPY src ./src
 
-# Forzar la creación del JAR ejecutable
-RUN mvn clean package -DskipTests spring-boot:repackage
+# Limpiar y construir con spring-boot específico
+RUN mvn clean compile spring-boot:repackage -DskipTests
 
-# Debug: mostrar todo lo que se generó
-RUN echo "=== Contenido completo de target/ ===" && \
-    find target -type f -name "*.jar" && \
-    echo "=== Archivos JAR encontrados ===" && \
-    ls -la target/*.jar 2>/dev/null || echo "No hay JARs en la raíz de target/"
+# Verificar estructura
+RUN echo "=== Verificando estructura ===" && \
+    ls -la target/ && \
+    echo "=== Buscando JARs ===" && \
+    find target -name "*.jar" -type f
 
-# Buscar específicamente el JAR ejecutable en la raíz de target/
-RUN JAR_FILE=$(find target -maxdepth 1 -name "*.jar" -type f | head -1) && \
-    if [ -z "$JAR_FILE" ]; then \
-        echo "ERROR: No se encontró JAR ejecutable" && exit 1; \
-    else \
-        cp "$JAR_FILE" app.jar && \
-        echo "JAR ejecutable encontrado: $JAR_FILE"; \
-    fi
+# El JAR debería estar en target/ directamente
+COPY target/*.jar app.jar
 
 EXPOSE 8080
 

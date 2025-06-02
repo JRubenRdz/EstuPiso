@@ -1,33 +1,27 @@
-# Etapa 1: Build
-FROM maven:3.9.4-openjdk-21-slim AS build
-
+# Usar una imagen de OpenJDK con JDK (ya que necesitamos compilar el código)
+FROM eclipse-temurin:21-jdk AS builder
+ 
+# Establecer el directorio de trabajo en el contenedor
 WORKDIR /app
 
-# Copiar pom.xml y descargar dependencias
-COPY pom.xml .
-RUN mvn dependency:go-offline -B
+# Copiar todos los archivos del directorio actual
+COPY . .
 
-# Copiar código y compilar
-COPY src ./src
-RUN mvn clean package -DskipTests
+# Ejecutar Maven para construir el archivo JAR
+RUN chmod +x ./mvnw
+RUN ./mvnw clean package
 
-# Debug en build
-RUN echo "=== Build completado ===" && ls -la target/
+# Ahora crear la imagen final usando la imagen de OpenJDK con solo JRE
+FROM eclipse-temurin:21-jre
 
-# Etapa 2: Runtime
-FROM openjdk:21-jre-slim
-
+# Establecer el directorio de trabajo en el contenedor
 WORKDIR /app
 
-# Copiar JAR desde etapa build
-COPY --from=build /app/target/EstuPiso-*.jar app.jar
+# Copiar el archivo JAR generado desde la imagen del build
+COPY --from=builder /app/target/*.jar app.jar
 
-# Verificar que se copió
-RUN ls -la app.jar
-
+# Exponer el puerto en el que tu aplicación se ejecutará
 EXPOSE 8080
 
-# Variables de entorno
-ENV JAVA_OPTS="-Xmx512m -Xms256m"
-
-CMD ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+# Comando para ejecutar la aplicación
+CMD ["java", "-jar", "app.jar"]

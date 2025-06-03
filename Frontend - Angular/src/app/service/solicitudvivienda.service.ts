@@ -2,7 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { catchError } from 'rxjs/operators';
-import { environment } from '../../environments/environment.development';
+import { environment } from '../../environments/active.environment';
 
 export interface CrearSolicitudDto {
   viviendaId: number;

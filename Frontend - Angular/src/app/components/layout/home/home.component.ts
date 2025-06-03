@@ -118,4 +118,8 @@ export class HomeComponent implements OnInit {
       target.src = '/assets/placeholder-house.jpg';
     }
   }
+
+  irABusqueda(): void {
+    this.router.navigate(['/buscar']);
+  }
 }

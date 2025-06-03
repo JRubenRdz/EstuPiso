@@ -185,9 +185,9 @@
       <!-- Ver más anuncios -->
       <div *ngIf="!isLoading && !error && ultimosAnuncios.length > 0" class="text-center mt-5">
         <p class="text-muted mb-3">¿Buscas más opciones?</p>
-        <button class="btn btn-outline-primary btn-lg">
+        <button class="btn btn-outline-primary btn-lg" (click)="irABusqueda()">
           <i class="bi bi-grid me-2"></i>
-          Ver Todos los Anuncios
+          Buscar anuncios
         </button>
       </div>
     </div>

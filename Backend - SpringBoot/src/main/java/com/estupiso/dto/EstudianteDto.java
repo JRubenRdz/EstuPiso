@@ -9,5 +9,5 @@ public class EstudianteDto {
     private String usuario;
     private String email;
     private String fotoPerfil;
-    private int viviendaId;
+    private Integer viviendaId;
 }

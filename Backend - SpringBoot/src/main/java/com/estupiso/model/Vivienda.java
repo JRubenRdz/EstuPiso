@@ -42,6 +42,7 @@ public class Vivienda extends DomainEntity {
     private String numero;
 
     @NotBlank
+    @Column(length = 1000)
     private String descripcion;
 
     @NotNull

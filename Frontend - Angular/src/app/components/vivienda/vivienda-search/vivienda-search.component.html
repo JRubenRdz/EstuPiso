@@ -38,18 +38,18 @@
             </option>
           </select>
           <small *ngIf="loadingProvincias" class="text-muted">Cargando...</small>
-        </div>
-
-        <!-- CAMBIAR: Municipio ahora es input de texto -->
+        </div>        <!-- CAMBIAR: Municipio ahora es input de texto -->
         <div class="col-md-4">
           <input
             type="text"
             [(ngModel)]="filters.municipio" 
             name="municipio"
             (input)="onMunicipioChange()"
-            placeholder="Escribe el municipio..."
+            [disabled]="!filters.provincia"
+            [placeholder]="!filters.provincia ? 'Selecciona primero una provincia' : 'Escribe el municipio...'"
             class="form-control form-control-sm">
-          <small class="text-muted">Escribe para buscar</small>
+          <small class="text-muted" *ngIf="filters.provincia">Escribe para buscar</small>
+          <small class="text-muted" *ngIf="!filters.provincia">Primero selecciona una provincia</small>
         </div>
 
       </div>

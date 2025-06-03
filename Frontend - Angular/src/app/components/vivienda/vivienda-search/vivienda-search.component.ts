@@ -8,7 +8,7 @@ import { ViviendaService } from '../../../service/vivienda.service';
 export interface SearchFilters {
   comunidad?: string;
   provincia?: string;
-  municipio?: string; // MANTENER como string
+  municipio?: string;
   nombre?: string;
   tipoVivienda?: string;
   precioMin?: number;
@@ -112,7 +112,6 @@ export class ViviendaSearchComponent implements OnInit {
 
     this.onFilterChange();
   }
-
   // SIMPLIFICAR onProvinciaChange - ELIMINAR lógica de municipios
   onProvinciaChange(): void {
     // CAMBIAR: Solo resetear municipio como string
